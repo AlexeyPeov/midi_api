@@ -1,4 +1,4 @@
-#include "../Headers/NoteInfo.h"
+#include "NoteInfo.h"
 
 namespace md {
     NoteInfo::NoteInfo(uint8_t note, uint32_t start, uint32_t finish) {
@@ -10,4 +10,4 @@ namespace md {
     bool NoteInfo::is_muted() const {
         return m_note == 0xFF;
     }
-} // mapi
+}

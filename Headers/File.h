@@ -28,17 +28,21 @@ namespace md {
 
         void set_time_division(uint16_t time_division);
 
+        [[nodiscard]] const std::vector<Track>& get_tracks() const;
+
+        std::vector<Track>& get_tracks();
+
     private:
         uint16_t m_time_division;  // [ticks per quarternote]
         std::vector<Track> m_tracks_vec;
 
         void read_header_chunk(std::ifstream &file);
 
-        void read_unknown_chunk(std::ifstream &file);
+        static void read_unknown_chunk(std::ifstream &file);
 
         void read_track_chunk(std::ifstream &file);
 
-        void read_event(
+        static void read_event(
                 std::ifstream &file,
                 Event *event,
                 bool *track_continue,
@@ -47,16 +51,16 @@ namespace md {
 
         void save_header_chunk(std::ofstream &output_file) const;
 
-        void save_track_chunk(
+        static void save_track_chunk(
                 std::ofstream &output_file,
                 const Track &track
-        ) const;
+        ) ;
 
-        uint32_t save_event(
+        static uint32_t save_event(
                 std::ofstream &output_file,
                 const Event &event,
                 uint8_t *last_cmd
-        ) const;
+        ) ;
 
         static uint32_t write(
                 std::ofstream &file,
