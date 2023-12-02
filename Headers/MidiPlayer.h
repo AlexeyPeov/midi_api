@@ -41,24 +41,19 @@ namespace md {
 
     private:
 
-        enum class PlayerState{
+        enum class PlayerState {
             NO,
             PAUSED,
             PLAYING,
         };
 
-        struct CurrTrackPos{
-            int m_track_id = -1;
-            int m_bar_id = 0;
+        struct CurrTrackPos {
+            int m_track_id = 0;
             int m_event_id = 0;
             size_t m_time = 0;
             bool m_read = true;
-            bool m_finished = false;
 
-            CurrTrackPos() = default;
-
-            explicit CurrTrackPos(int track_id)
-            {
+            explicit CurrTrackPos(int track_id) {
                 m_track_id = track_id;
             }
         };
@@ -86,13 +81,9 @@ namespace md {
 
         void m_increment_pos_ptr();
 
-        [[nodiscard]] CurrTrackPos m_increment_ev_ptr(const CurrTrackPos& p) const;
+        std::tuple<Event *, size_t, uint32_t> m_get_next_event() const;
 
-        [[nodiscard]] bool m_event_exists(const CurrTrackPos& p) const;
-
-        [[nodiscard]] std::tuple<Event *, size_t, uint32_t> m_get_next_event() const;
-
-        [[nodiscard]] const Event * m_get_next_event(const CurrTrackPos& p) const;
+        const Event * m_get_next_event(CurrTrackPos p) const;
 
         void m_play_sync();
 

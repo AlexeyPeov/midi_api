@@ -6,18 +6,17 @@ namespace md {
             std::ofstream &file,
             const uint8_t *c,
             std::streamsize size
-    )
-    {
+    ) {
         file.write(reinterpret_cast<const char *>(c), size);
         return size;
     }
 
     file::file() {
-        m_time_division = 500;
+        m_quarter_note_len = 500;
     }
 
     file::file(const char *path) {
-        m_time_division = 500;
+        m_quarter_note_len = 500;
         load(path);
     }
 
@@ -31,7 +30,7 @@ namespace md {
 
         save_header_chunk(out_file);
 
-        for (const auto &track : m_tracks_vec) {
+        for (const auto &track: m_tracks_vec) {
             save_track_chunk(out_file, track);
         }
 
@@ -50,8 +49,7 @@ namespace md {
     void file::save_track_chunk(
             std::ofstream &output_file,
             const Track &track
-    )
-    {
+    ) {
 
         IOHelper::write_as<uint32_t>(output_file, 0x4D54726B);  // "MTrk"
 
@@ -62,14 +60,10 @@ namespace md {
         uint32_t chunk_size = 0;
         uint8_t last_cmd = 0;
 
-        auto& bars = track.get_bars_vec();
-
-        for (const auto &bar: bars){
-            auto& events = bar.m_events;
-            for(const auto& e : events){
-                chunk_size += save_event(output_file, e, &last_cmd);
-            }
+        for (const auto &e: track) {
+            chunk_size += save_event(output_file, e, &last_cmd);
         }
+
 
         output_file.seekp(size_pos);
 
@@ -82,11 +76,11 @@ namespace md {
             std::ofstream &output_file,
             const Event &event,
             uint8_t *last_cmd
-    )
-    {
+    ) {
 
 
-        uint32_t r = IOHelper::save_variable_len_quantity(output_file, event.dt());
+        uint32_t r = IOHelper::save_variable_len_quantity(output_file,
+                                                          event.dt());
 
         if (event.empty()) {
             std::cout << "EVENT EMPTY AT FILE::SAVE_EVENT\n";
@@ -141,10 +135,10 @@ namespace md {
         IOHelper::write_as<uint16_t>(output_file, fileType);
 
         // save tracks number
-        IOHelper::write_as<uint16_t>(output_file,static_cast<uint16_t>(tr_sz));
+        IOHelper::write_as<uint16_t>(output_file, static_cast<uint16_t>(tr_sz));
 
         // save time division
-        IOHelper::write_as<uint16_t>(output_file, m_time_division);
+        IOHelper::write_as<uint16_t>(output_file, m_quarter_note_len);
     }
 
     void file::add_tracks(size_t amount) {
@@ -221,19 +215,18 @@ namespace md {
         if ((type != 0) && (type != 1))
             std::cerr << "unsupported MIDI file type: " << type << '\n';
         // type 0: single track
-        // type 1: multi track
+        // type 1: multi-track
 
         // read tracks number
         auto tracks_num = IOHelper::read_as<uint16_t>(file);
 
-        // reserve vector capacity
         m_tracks_vec.reserve(tracks_num);
 
         // read time division
-        m_time_division = IOHelper::read_as<uint16_t>(file);
+        m_quarter_note_len = IOHelper::read_as<uint16_t>(file);
 
         // check time division
-        if (m_time_division & 0x8000)
+        if (m_quarter_note_len & 0x8000)
             std::cerr << "unsupported MIDI file time division" << '\n';
     }
 
@@ -254,41 +247,39 @@ namespace md {
         auto begin = file.tellg();
         bool track_continue = true;
 
-        // todo : this
-        auto& bars = track.get_bars_vec();
-        bars.emplace_back();
-        auto& bar = bars.back();
-        auto& events = bar.m_events;
+
         while (track_continue) {
-            events.emplace_back();
-            Event &event = events.back();
+            Event event;
 
             uint32_t dt = IOHelper::get_variable_len_quantity(file);
 
             event.set_dt(dt);
 
             read_event(file, &event, &track_continue, &running_status);
+
+            track.emplace_back(event);
         }
 
         if (chunk_size != (file.tellg() - begin))
             std::cerr << "track data and track chunk size mismatch" << '\n';
     }
 
+
     void file::read_event(
             std::ifstream &file,
             Event *event,
             bool *track_continue,
             uint8_t *running_status
-    )
-    {
+    ) {
         auto cmd = IOHelper::read_as<uint8_t>(file);
 
         // check running status
         bool incomplete = false;
-        auto& message_vec = event->get_message_vec();
+        auto &message_vec = event->get_message_vec();
         if (cmd < 0x80) {
             incomplete = true;  // this flag says: do not read to much later
-            message_vec.emplace_back(*running_status);  // command from previous complete event
+            message_vec.emplace_back(
+                    *running_status);  // command from previous complete event
             message_vec.emplace_back(cmd);
             cmd = *running_status;  // swap
         } else {
@@ -296,59 +287,68 @@ namespace md {
             message_vec.emplace_back(cmd);
         }
 
-        auto two_param_events = [&](){
+        auto two_param_events = [&]() {
             message_vec.emplace_back(IOHelper::read_as<uint8_t>(file));
             if (!incomplete)
                 message_vec.emplace_back(IOHelper::read_as<uint8_t>(file));
         };
 
-        auto one_param_events = [&](){
+        auto one_param_events = [&]() {
             if (!incomplete)
                 message_vec.emplace_back(IOHelper::read_as<uint8_t>(file));
         };
 
-        auto on_meta_event = [&](auto& meta_event_type){
+        auto on_meta_event = [&](auto &meta_event_type) {
             auto str_len = IOHelper::read_as<uint8_t>(file);
 
-            if ((meta_event_type == MidiMetaType::kSequenceNumber) && (str_len != 2)){
-                std::cerr << "sequence number event size is not 2 but " << str_len << '\n';
+            if ((meta_event_type == MidiMetaType::kSequenceNumber) &&
+                (str_len != 2)) {
+                std::cerr << "sequence number event size is not 2 but "
+                          << str_len << '\n';
             }
 
-            if ((meta_event_type == MidiMetaType::kChannelPrefix) && (str_len != 1)){
-                std::cerr << "channel prefix event size is not 1 but" << str_len << '\n';
+            if ((meta_event_type == MidiMetaType::kChannelPrefix) &&
+                (str_len != 1)) {
+                std::cerr << "channel prefix event size is not 1 but" << str_len
+                          << '\n';
             }
 
 
-            if ((meta_event_type == MidiMetaType::kOutputCable) && (str_len != 1)){
-                std::cerr << "output cable event size is not 1 but" << str_len << '\n';
+            if ((meta_event_type == MidiMetaType::kOutputCable) &&
+                (str_len != 1)) {
+                std::cerr << "output cable event size is not 1 but" << str_len
+                          << '\n';
             }
 
-            if ((meta_event_type == MidiMetaType::kTempo) && (str_len != 3)){
+            if ((meta_event_type == MidiMetaType::kTempo) && (str_len != 3)) {
                 std::cerr << "tempo event size is not 3 but" << str_len << '\n';
             }
 
 
-            if ((meta_event_type == MidiMetaType::kSmpteOffset) && (str_len != 5)){
-                std::cerr << "SMPTE offset event size is not 5 but " << str_len << '\n';
+            if ((meta_event_type == MidiMetaType::kSmpteOffset) &&
+                (str_len != 5)) {
+                std::cerr << "SMPTE offset event size is not 5 but " << str_len
+                          << '\n';
             }
 
             if (meta_event_type == MidiMetaType::kEndOfTrack) {
 
-                if (str_len != 0){
-                    std::cerr << "end of track event size is not 0 but " << str_len << '\n';
+                if (str_len != 0) {
+                    std::cerr << "end of track event size is not 0 but "
+                              << str_len << '\n';
                 }
 
                 *track_continue = false;
             }
 
             // read string
-            for (int i = 0; i < str_len; i++){
+            for (int i = 0; i < str_len; i++) {
                 message_vec.emplace_back(IOHelper::read_as<uint8_t>(file));
             }
 
         };
 
-        auto meta_or_sysex_events = [&](){
+        auto meta_or_sysex_events = [&]() {
             auto command = MidiMessageType(cmd);
             switch (command) {
                 case MidiMessageType::kMeta:  // META events
@@ -376,7 +376,8 @@ namespace md {
                             on_meta_event(meta_event_type);
                             break;
                         default:
-                            std::cerr << "CxxMidi: unknown meta event 0x" << std::hex << val << '\n';
+                            std::cerr << "CxxMidi: unknown meta event 0x"
+                                      << std::hex << val << '\n';
                             break;
                     }
                     break;
@@ -385,7 +386,8 @@ namespace md {
                 case MidiMessageType::kSysExEnd: {
                     uint32_t size = IOHelper::get_variable_len_quantity(file);
                     for (unsigned int i = 0; i < size; i++)
-                        message_vec.emplace_back(IOHelper::read_as<uint8_t>(file));
+                        message_vec.emplace_back(
+                                IOHelper::read_as<uint8_t>(file));
                 }
                     break;
             }
@@ -403,7 +405,7 @@ namespace md {
                 two_param_events();
                 break;
 
-            // one parameter events
+                // one parameter events
             case MidiMessageType::kProgramChange:
             case MidiMessageType::kChannelAftertouch:
                 one_param_events();
@@ -421,7 +423,7 @@ namespace md {
     }
 
     uint16_t file::get_time_division() const {
-        return m_time_division;
+        return m_quarter_note_len;
     }
 
 }

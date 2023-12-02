@@ -263,87 +263,10 @@ namespace md{
         kTempo = 0x51,          // size 3
         kSmpteOffset = 0x54,    // size 5
         kTimeSignature = 0x58,
-        kKeySignature = 0x59
+        kKeySignature = 0x59,
+        NO = 0x66
     };
 
-    enum class Style {
-        POP,
-        JAZZ,
-        NONE,
-    };
-
-    enum class NoteLenBias {
-        NO,
-        SLOOOOW,
-        SLOW,
-        MEDIUM,
-        FAST,
-        FASTER,
-        FFFAAASSTER,
-    };
-
-    enum class FileCreationStatus{
-        FAILED_UNKNOWN = 0,
-        FAILED_FILE_EMPTY,
-        SUCCESS,
-    };
-
-    enum class ProgressionStyle {
-        NOTES = 0,
-        ROOTS,
-        NOTES_OF_CHORD,
-
-        CHORD_PLAIN,
-        CHORD_ASC,
-        CHORD_DESC,
-        CHORD_ASC_DESC,
-        CHORD_ALTERNATING,
-        CHORD_RAND_SEQ,
-    };
-
-    enum class Keys {
-        C = 0,
-        C_SHARP = 1,
-        D_FLAT = 1,
-        D = 2,
-        D_SHARP = 3,
-        E_FLAT = 3,
-        E = 4,
-        F = 5,
-        F_SHARP = 5,
-        G_FLAT = 6,
-        G = 7,
-        G_SHARP = 8,
-        A_FLAT = 8,
-        A = 9,
-        A_SHARP = 10,
-        B_FLAT = 10,
-        B = 11,
-
-
-    };
-
-    enum class RomanChord {
-        I = 0,
-        i = 0,
-        II = 2,
-        ii = 2,
-        III = 4,
-        iii = 3,
-        IV = 5,
-        iv = 5,
-        V = 7,
-        v = 7,
-        vi = 8,
-        VI = 9,
-        vii = 10,
-        VII = 11,
-    };
-
-    enum class Mood {
-        MAJOR,
-        MINOR,
-    };
 }
 
 #endif //MIDI_API_CONSTANTS_H

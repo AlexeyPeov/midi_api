@@ -12,8 +12,6 @@ int main() {
     player.play();
 
     //file.save_as("chopin_out.mid");
-    // player.play_async();
-    // player.play_sync();
 
 
     return 0;

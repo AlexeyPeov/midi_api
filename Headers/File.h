@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <cmath>
 
 #include "Track.h"
 #include "IOHelper.h"
@@ -26,14 +27,14 @@ namespace md {
 
         uint16_t get_time_division() const;
 
-        void set_time_division(uint16_t time_division);
+        void set_quarter_note_len(uint16_t q_len);
 
         [[nodiscard]] const std::vector<Track>& get_tracks() const;
 
         std::vector<Track>& get_tracks();
 
     private:
-        uint16_t m_time_division;  // [ticks per quarternote]
+        uint16_t m_quarter_note_len;
         std::vector<Track> m_tracks_vec;
 
         void read_header_chunk(std::ifstream &file);

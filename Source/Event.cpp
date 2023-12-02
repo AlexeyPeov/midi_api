@@ -6,25 +6,6 @@ namespace md{
         m_dt = dt;
     }
 
-    Event::Event(
-            uint32_t dt,
-            uint16_t a,
-            uint16_t b,
-            uint16_t c
-    )
-    {
-        m_dt = dt;
-        if(m_good(a)){
-            m_message_vec.emplace_back(a);
-        }
-        if(m_good(b)){
-            m_message_vec.emplace_back(b);
-        }
-        if(m_good(c)){
-            m_message_vec.emplace_back(c);
-        }
-    }
-
     uint32_t Event::dt() const {
         return m_dt;
     }
@@ -55,6 +36,14 @@ namespace md{
     bool Event::is_meta(MidiMetaType meta_type) const {
         return is_meta() && (m_message_vec[1] == (uint16_t)meta_type);
     }
+
+    MidiMetaType Event::get_meta_type() const {
+        if (is_meta()) {
+            return static_cast<MidiMetaType>(m_message_vec[1]);
+        }
+        return MidiMetaType::NO;
+    }
+
 
     bool Event::is_sysex() const {
         if (!m_message_vec.empty()){
