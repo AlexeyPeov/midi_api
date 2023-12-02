@@ -1,4 +1,4 @@
-#include "../Headers/File.h"
+#include "File.h"
 
 namespace md {
 
@@ -39,10 +39,18 @@ namespace md {
         return 0;
     }
 
+    const std::vector<Track> &file::get_tracks() const {
+        return m_tracks_vec;
+    }
+
+    std::vector<Track> &file::get_tracks() {
+        return m_tracks_vec;
+    }
+
     void file::save_track_chunk(
             std::ofstream &output_file,
             const Track &track
-    ) const
+    )
     {
 
         IOHelper::write_as<uint32_t>(output_file, 0x4D54726B);  // "MTrk"
@@ -74,7 +82,7 @@ namespace md {
             std::ofstream &output_file,
             const Event &event,
             uint8_t *last_cmd
-    ) const
+    )
     {
 
 
@@ -148,7 +156,6 @@ namespace md {
     void file::load(const char *path) {
         m_tracks_vec.clear();
 
-        // open file
         std::ifstream file(path, std::ifstream::in | std::ifstream::binary);
 
         if (!file.is_open()) {
@@ -158,7 +165,8 @@ namespace md {
 
         // calculate file length
         file.seekg(0, std::ifstream::end);
-        auto fileLength = file.tellg();
+        auto file_len = file.tellg();
+
         file.seekg(0, std::ifstream::beg);
 
         // control counters
@@ -166,16 +174,20 @@ namespace md {
         uint32_t headers = 0;
 
         // loop over chunks while data still in buffer
-        while (file.good() && (fileLength - file.tellg())) {
-            uint32_t chunk_id = IOHelper::read_as<uint32_t>(file);
+
+        const auto msg_type_header = 0x4D546864;
+        const auto msg_type_track = 0x4D54726B;
+
+        while (file.good() && (file_len - file.tellg())) {
+            auto chunk_id = IOHelper::read_as<uint32_t>(file);
 
             switch (chunk_id) {
-                case 0x4D546864:  // "MThd"
+                case msg_type_header:
                     read_header_chunk(file);
                     headers++;
                     break;
 
-                case 0x4D54726B:  // "MTrk"
+                case msg_type_track:
                     read_track_chunk(file);
                     break;
 
@@ -203,7 +215,7 @@ namespace md {
         }
 
         // read file type
-        uint16_t type = IOHelper::read_as<uint16_t>(file);
+        auto type = IOHelper::read_as<uint16_t>(file);
 
         // check file type
         if ((type != 0) && (type != 1))
@@ -212,7 +224,7 @@ namespace md {
         // type 1: multi track
 
         // read tracks number
-        uint16_t tracks_num = IOHelper::read_as<uint16_t>(file);
+        auto tracks_num = IOHelper::read_as<uint16_t>(file);
 
         // reserve vector capacity
         m_tracks_vec.reserve(tracks_num);
@@ -226,7 +238,7 @@ namespace md {
     }
 
     void file::read_unknown_chunk(std::ifstream &file) {
-        uint32_t chunk_size = IOHelper::read_as<uint32_t>(file);
+        auto chunk_size = IOHelper::read_as<uint32_t>(file);
         // skip chunk data
         file.seekg(chunk_size, std::ifstream::cur);
     }
@@ -236,7 +248,7 @@ namespace md {
 
         Track &track = m_tracks_vec.back();
 
-        uint32_t chunk_size = IOHelper::read_as<uint32_t>(file);
+        auto chunk_size = IOHelper::read_as<uint32_t>(file);
 
         uint8_t running_status = 0;
         auto begin = file.tellg();
@@ -262,15 +274,14 @@ namespace md {
             std::cerr << "track data and track chunk size mismatch" << '\n';
     }
 
-    void
-    file::read_event(
+    void file::read_event(
             std::ifstream &file,
             Event *event,
             bool *track_continue,
             uint8_t *running_status
     )
     {
-        uint8_t cmd = IOHelper::read_as<uint8_t>(file);
+        auto cmd = IOHelper::read_as<uint8_t>(file);
 
         // check running status
         bool incomplete = false;
@@ -297,7 +308,7 @@ namespace md {
         };
 
         auto on_meta_event = [&](auto& meta_event_type){
-            uint8_t str_len = IOHelper::read_as<uint8_t>(file);
+            auto str_len = IOHelper::read_as<uint8_t>(file);
 
             if ((meta_event_type == MidiMetaType::kSequenceNumber) && (str_len != 2)){
                 std::cerr << "sequence number event size is not 2 but " << str_len << '\n';
@@ -343,7 +354,7 @@ namespace md {
                 case MidiMessageType::kMeta:  // META events
                 {
                     auto val = IOHelper::read_as<uint8_t>(file);
-                    MidiMetaType meta_event_type = MidiMetaType(val);
+                    auto meta_event_type = MidiMetaType(val);
                     message_vec.emplace_back(val);
 
                     switch (meta_event_type) {
@@ -380,7 +391,7 @@ namespace md {
             }
         };
         // control events
-        MidiMessageType msg = MidiMessageType(cmd & 0xf0);
+        auto msg = MidiMessageType(cmd & 0xf0);
 
         switch (msg) {
             // two parameter events
@@ -407,6 +418,10 @@ namespace md {
                 break;
 
         }
+    }
+
+    uint16_t file::get_time_division() const {
+        return m_time_division;
     }
 
 }

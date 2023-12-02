@@ -50,6 +50,8 @@ namespace md {
                 std::ofstream &output_file,
                 unsigned int val
         );
+
+        static uint32_t extract_tempo(uint8_t v0, uint8_t v1, uint8_t v2);
     };
 
 }
