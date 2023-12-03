@@ -10,6 +10,7 @@ namespace md {
         midi_player::m_setup_windows_timers();
 
         m_async = async;
+
     }
 
     void midi_player::m_setup_windows_timers() {
@@ -30,7 +31,7 @@ namespace md {
 #endif
     }
 
-    void midi_player::set_file(file *file) {
+    void midi_player::set_file(std::unique_ptr<file> file) {
 
         if (!file) {
             std::cerr << "error at md::midi_player::set_file : nullptr given\n";
@@ -38,8 +39,9 @@ namespace md {
         }
 
         std::lock_guard<std::mutex> guard(m_mutex);
-        m_file_ptr = file;
         m_output->reset();
+        m_file_ptr = std::move(file);
+        m_tempo = 500000 / 500;
 
         auto tracks_size = m_file_ptr->get_tracks().size();
         m_tracks_pos_vec.clear();
@@ -100,117 +102,55 @@ namespace md {
     }
 
     void midi_player::m_play_sync() {
-
-        if (!m_file_ptr) {
-            return;
-        }
-
         bool finished = false;
 
         while (!finished) {
-
-            m_increment_pos_ptr();
-            const EventInfo e_info = m_get_next_event();
-            const auto &[event_ptr,sleep_time,track_id] = e_info;
-
-            if (event_ptr) {
-                m_execute_event(*event_ptr);
-                m_tracks_pos_vec[track_id].m_read = false;
-                m_tracks_pos_vec[track_id].m_event_id += 1;
-            } else {
-                finished = true;
-            }
-
-            std::this_thread::sleep_for(std::chrono::microseconds(sleep_time));
+            finished = m_execute_next_available_event();
         }
     }
 
     void midi_player::m_play_async() {
+        while(m_player_state != PlayerState::NO){
 
+            if(m_player_state == PlayerState::PLAYING){
+                bool finished = m_execute_next_available_event();
+                if(finished){
+                    m_player_state = PlayerState::PAUSED;
+                }
+            }
+
+            else if (m_player_state == PlayerState::PAUSED){
+                std::this_thread::sleep_for(std::chrono::milliseconds(16));
+            }
+        }
     }
 
     void midi_player::play() {
 
-        if (m_async) {
-            m_play_async();
-        } else {
-            m_play_sync();
-        }
-
-
-        /* m_state = PlayerState::PLAYING;
-         while (m_state != PlayerState::NO) {
-             if (!m_file_ptr) {
-                 std::cout << "buffer is empty, or no file to play at midi_player::play\n";
-                 bool file_appeared = false;
-                 while (!m_file_ptr) {
-                     std::this_thread::sleep_for(std::chrono::milliseconds(16));
-
-                     if (m_state == PlayerState::NO){
-                         return;
-                     }
-                     if (m_file_ptr){
-                         file_appeared = true;
-                     }
-
-                     if (file_appeared) {
-                         std::cout << "good to go at Player::play\n";
-                         break;
-                     }
-                 }
-             }
-             m_player_loop();
-         }*/
-    }
-
-    void midi_player::m_player_loop() {
-
-        bool should_return = false;
-
-        {
-            std::lock_guard<std::mutex> guard(m_mutex);
-
-            if (m_state != PlayerState::PLAYING) {
-                should_return = true;
-                goto back;
-            }
-
-            m_increment_pos_ptr();
-        }
-
-        back:
-        size_t sleep_time = 16;
-        if (should_return) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
+        if(!m_file_ptr)
             return;
+
+
+        if (m_async) {
+            m_player_state = PlayerState::PLAYING;
+
+            bool thread_started = m_thread.joinable();
+
+            if(!thread_started){
+                m_thread = std::thread([this] { m_play_async(); });
+            }
         }
+        else {
 
-
-        const auto &[event_ptr, sleep_time_til_next, el_id] = m_get_next_event();
-
-        if (event_ptr) {
-            m_execute_event(*event_ptr);
-            m_tracks_pos_vec[el_id].m_read = false;
-            m_tracks_pos_vec[el_id].m_event_id += 1;
-            sleep_time = sleep_time_til_next;
+            m_play_sync();
 
         }
-
-        std::this_thread::sleep_for(std::chrono::microseconds(sleep_time));
     }
 
     void midi_player::pause() {
-
+        std::lock_guard<std::mutex> guard(m_mutex);
+        m_player_state = PlayerState::PAUSED;
     }
-
-    void midi_player::resume() {
-
-    }
-
-    void midi_player::reset() {
-
-    }
-
 
     void midi_player::m_increment_pos_ptr() {
 
@@ -235,7 +175,8 @@ namespace md {
     }
 
     midi_player::EventInfo midi_player::m_get_next_event() const {
-        Event *event = nullptr;
+
+        Event *event_ptr = nullptr;
         uint32_t min_time = UINT32_MAX;
         size_t sleep_time_til_next = SIZE_MAX;
         uint32_t pos = UINT32_MAX;
@@ -254,7 +195,7 @@ namespace md {
             const size_t &time = p.m_time;
 
             if (time <= min_time) {
-                event = &e;
+                event_ptr = &e;
                 min_time = time;
                 pos = i;
             }
@@ -283,9 +224,12 @@ namespace md {
 
         sleep_time_til_next = sleep_time_til_next * m_tempo;
 
-        return {event, sleep_time_til_next, pos};
-    }
+        if(!event_ptr){
+            sleep_time_til_next = 16 * m_tempo;
+        }
 
+        return {event_ptr, sleep_time_til_next, pos};
+    }
 
     void midi_player::go_to(double pos) {
         if(pos > 1){
@@ -296,6 +240,8 @@ namespace md {
         }
 
         std::lock_guard<std::mutex> guard(m_mutex);
+
+        m_output->reset();
 
         for(int i = 0; i < m_tracks_pos_vec.size(); ++i){
 
@@ -348,6 +294,43 @@ namespace md {
         return val;
     }
 
+    midi_player::~midi_player() {
+        if(m_thread.joinable()){
+            m_thread.join();
+        }
+    }
 
+    bool midi_player::m_execute_next_available_event() {
+
+        if(!m_file_ptr){
+            return true; // finished
+        }
+
+        m_increment_pos_ptr();
+        const EventInfo e_info = m_get_next_event();
+        const auto &[event_ptr,sleep_time,track_id] = e_info;
+
+        if (event_ptr) {
+            m_execute_event(*event_ptr);
+            m_tracks_pos_vec[track_id].m_read = false;
+            m_tracks_pos_vec[track_id].m_event_id += 1;
+        }
+        std::this_thread::sleep_for(std::chrono::microseconds(sleep_time));
+
+        bool finished = event_ptr == nullptr;
+        return finished;
+    }
+
+    void midi_player::join_threads() {
+        m_player_state = PlayerState::NO;
+        if(m_thread.joinable()){
+            m_thread.join();
+        }
+    }
+
+    std::unique_ptr<file> midi_player::return_file() {
+        std::lock_guard<std::mutex> guard(m_mutex);
+        return std::move(m_file_ptr);
+    }
 
 }

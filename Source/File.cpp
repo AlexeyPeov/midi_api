@@ -148,14 +148,14 @@ namespace md {
 
 
     void file::load(const char *path) {
-        m_tracks_vec.clear();
-
         std::ifstream file(path, std::ifstream::in | std::ifstream::binary);
 
         if (!file.is_open()) {
             std::cerr << "mapi::file::load couldn't open: " << path << '\n';
             return;
         }
+
+        m_tracks_vec.clear();
 
         // calculate file length
         file.seekg(0, std::ifstream::end);
@@ -224,7 +224,6 @@ namespace md {
 
         // read time division
         m_quarter_note_len = IOHelper::read_as<uint16_t>(file);
-
         // check time division
         if (m_quarter_note_len & 0x8000)
             std::cerr << "unsupported MIDI file time division" << '\n';

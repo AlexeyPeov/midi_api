@@ -2,21 +2,30 @@
 
 int main() {
 
+    std::unique_ptr<md::file> file = std::make_unique<md::file>();
 
+    file->load("test.mid");
 
-    md::file file;
-    file.load("chopin.mid");
+    bool play_async = true;
 
-    md::midi_player player;
+    md::midi_player player(play_async);
 
-    player.set_file(&file);
-
-    player.go_to(0.72);
+    player.set_file(std::move(file));
 
     player.play();
 
-    //file.save_as("chopin_out.mid");
+    file = player.return_file();
 
+    file->load("chopin.mid");
+
+    player.set_file(std::move(file));
+
+    player.play();
+
+    // do this whenever you're ready to finish the playback
+    player.join_threads();
+
+    //file.save_as("chopin_out.mid");
 
     return 0;
 }

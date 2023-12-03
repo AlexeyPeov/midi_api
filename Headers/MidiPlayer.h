@@ -25,22 +25,21 @@ namespace md {
         // set to true if you want it to play on a different thread
         explicit midi_player(bool async = false);
 
+        ~midi_player();
+
         // can only be called if player is asynchronous, otherwise no effect
         void pause();
 
-        // can only be called if player is asynchronous, otherwise no effect
-        void resume();
+        void set_file(std::unique_ptr<file> file);
 
-        // can only be called if player is asynchronous, otherwise no effect
-        // joins threads.
-        void reset();
-
-        void set_file(file *file);
+        std::unique_ptr<file> return_file();
 
         void play();
 
         // pos should be between 0 and 1
         void go_to(double pos);
+
+        void join_threads();
 
     private:
 
@@ -65,7 +64,7 @@ namespace md {
             size_t m_track_id = 0;
         };
 
-        file *m_file_ptr;
+        std::unique_ptr<file> m_file_ptr;
 
         uint32_t m_tempo;
 
@@ -74,7 +73,7 @@ namespace md {
 
         std::vector<CurrTrackPos> m_tracks_pos_vec; // for sync playing
 
-        PlayerState m_state;
+        PlayerState m_player_state = PlayerState::NO;
 
         std::unique_ptr<MessageInterface> m_output;
 
@@ -100,7 +99,7 @@ namespace md {
 
         void m_play_async();
 
-
+        bool m_execute_next_available_event();
     };
 
 
