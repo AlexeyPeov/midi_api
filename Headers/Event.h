@@ -16,6 +16,8 @@ namespace md {
 
         Event(uint32_t dt);
 
+        Event(uint32_t dt, const std::vector<uint8_t>& msg);
+
         bool empty() const;
 
         size_t size() const;

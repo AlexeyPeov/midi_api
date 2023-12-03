@@ -7,7 +7,7 @@ include_directories(Headers Source)
 
 file(GLOB_RECURSE SOURCES "Headers/*.h" "Source/*.cpp")
 
-add_executable(midi_api main.cpp ${SOURCES} Headers/DefaultMidiOutput.h)
+add_executable(midi_api main.cpp ${SOURCES})
 
 
 if(WIN32 OR WIN64)

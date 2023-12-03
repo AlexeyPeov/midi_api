@@ -6,6 +6,11 @@ namespace md{
         m_dt = dt;
     }
 
+    Event::Event(uint32_t dt, const std::vector<uint8_t> &msg) {
+        m_dt = dt;
+        m_message_vec = msg;
+    }
+
     uint32_t Event::dt() const {
         return m_dt;
     }
@@ -125,4 +130,5 @@ namespace md{
     bool Event::m_good(uint16_t val) const {
         return val != NOT_SET;
     }
+
 }

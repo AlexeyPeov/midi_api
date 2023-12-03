@@ -10,7 +10,6 @@
 
 #include "Event.h"
 #include "constants.h"
-#include "Bar.h"
 
 namespace md {
 

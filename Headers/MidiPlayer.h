@@ -39,6 +39,9 @@ namespace md {
 
         void play();
 
+        // pos should be between 0 and 1
+        void go_to(double pos);
+
     private:
 
         enum class PlayerState {
@@ -48,22 +51,28 @@ namespace md {
         };
 
         struct CurrTrackPos {
-            int m_track_id = 0;
-            int m_event_id = 0;
+            size_t m_event_id = 0;
             size_t m_time = 0;
-            bool m_read = true;
+            bool m_read = false;
 
-            explicit CurrTrackPos(int track_id) {
-                m_track_id = track_id;
-            }
+            CurrTrackPos() = default;
+
+        };
+
+        struct EventInfo{
+            Event* m_event_ptr = nullptr;
+            size_t m_sleep_time = 0;
+            size_t m_track_id = 0;
         };
 
         file *m_file_ptr;
 
-        uint32_t m_tempo;  // [microseconds per quarternote]
+        uint32_t m_tempo;
 
-        size_t m_curr_pos = 0;
-        std::vector<CurrTrackPos> m_tracks_pos_vec;
+        size_t max_time = 0;
+        std::vector<std::vector<size_t>> m_track_ev_time_vec;
+
+        std::vector<CurrTrackPos> m_tracks_pos_vec; // for sync playing
 
         PlayerState m_state;
 
@@ -75,15 +84,17 @@ namespace md {
 
         static void m_setup_windows_timers();
 
+        void m_setup_async_goto_vec();
+
         void m_execute_event(const Event &event);
 
         void m_player_loop();
 
         void m_increment_pos_ptr();
 
-        std::tuple<Event *, size_t, uint32_t> m_get_next_event() const;
+        size_t m_get_ev_index(const double pos, int track_index);
 
-        const Event * m_get_next_event(CurrTrackPos p) const;
+        EventInfo m_get_next_event() const;
 
         void m_play_sync();
 
