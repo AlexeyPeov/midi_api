@@ -20,13 +20,6 @@ namespace md {
 
         ~Track() = default;
 
-        void set_instrument(const uint8_t instrument);
-
-        uint8_t get_instrument() const;
-
-    private:
-        std::string m_name;
-        uint8_t m_instrument = 0;
     };
 
 }

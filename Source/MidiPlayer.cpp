@@ -40,8 +40,9 @@ namespace md {
 
         std::lock_guard<std::mutex> guard(m_mutex);
         m_output->reset();
-        m_file_ptr = std::move(file);
         m_tempo = 500000 / 500;
+        m_max_time = 0;
+        m_file_ptr = std::move(file);
 
         auto tracks_size = m_file_ptr->get_tracks().size();
         m_tracks_pos_vec.clear();
@@ -80,7 +81,7 @@ namespace md {
                 ev_time[j] = time;
             }
 
-            max_time = std::max(max_time, time);
+            m_max_time = std::max(m_max_time, time);
         }
     }
 
@@ -261,7 +262,7 @@ namespace md {
             size = 1;
         }
 
-        size_t to_find = max_time * pos;
+        size_t to_find = m_max_time * pos;
 
         size_t lo = 0, hi = size-1;
 

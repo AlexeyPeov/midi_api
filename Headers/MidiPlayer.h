@@ -68,7 +68,7 @@ namespace md {
 
         uint32_t m_tempo;
 
-        size_t max_time = 0;
+        size_t m_max_time = 0;
         std::vector<std::vector<size_t>> m_track_ev_time_vec;
 
         std::vector<CurrTrackPos> m_tracks_pos_vec; // for sync playing
