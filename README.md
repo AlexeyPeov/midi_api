@@ -4,6 +4,7 @@ Create/edit/play midi files
 WORK IN PROGRESS
 
 Usage:
+
 #include "MidiPlayer.h"
 
 int main() {
@@ -12,16 +13,20 @@ int main() {
 
     file->load("test.mid");               // whatever .mid file you like
 
-    bool play_async = true; // play on a separate thread
+    bool play_async = true;               // play on a separate thread
 
     md::midi_player player(play_async);
 
     player.set_file(std::move(file));     // give ownership of a file to the player
-    
+
     player.play();
-    player.go_to(0.25); // you can move the playback position within 0 and 1
+    player.go_to(0.25);                  // you can move the playback position within 0 and 1
+    player.pause();                      // doesn't stop the thread
+    
 
     file = player.return_file();         // return ownership
+
+    file->load(chopin.mid);              // do other stuff 
 
     // do this when you're ready to finish the playback
     // you can always call play() on a player again whenever you want
