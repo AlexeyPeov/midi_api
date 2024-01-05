@@ -1,10 +1,10 @@
-#include "MidiPlayer.h"
+#include "midi_player.h"
 
 namespace md {
 
 
     midi_player::midi_player(bool async) {
-        m_tempo = 500000 / 500;
+        m_tempo = 1000;
         m_file_ptr = nullptr;
         m_output = std::make_unique<DefaultMidiOutput>();
         midi_player::m_setup_windows_timers();
@@ -40,7 +40,7 @@ namespace md {
 
         std::lock_guard<std::mutex> guard(m_mutex);
         m_output->reset();
-        m_tempo = 500000 / 500;
+        m_tempo = 1000;
         m_max_time = 0;
         m_file_ptr = std::move(file);
 
@@ -70,7 +70,7 @@ namespace md {
 
             size_t time = 0;
 
-            auto& track = tracks[i];
+            auto& track = tracks[i].get_events();
             auto track_sz = track.size();
             auto& ev_time = m_track_ev_time_vec[i];
 
@@ -85,13 +85,13 @@ namespace md {
         }
     }
 
-    void midi_player::m_execute_event(const Event &event) {
+    void midi_player::m_execute_event(const event &event) {
         if (event.is_meta()) {
-            if (event.is_meta(MidiMetaType::kTempo)) {
+            if (event.is_meta(MidiMetaType::Tempo)) {
                 auto &msg = event.get_message_vec();
                 m_tempo = IOHelper::extract_tempo(msg[2], msg[3], msg[4]);
                 if (m_file_ptr) {
-                    m_tempo /= m_file_ptr->get_time_division();
+                    m_tempo /= m_file_ptr->get_quarter_note_len();
                 }
             }
             return;  // handle other META events(i ignore them, i dont care)
@@ -159,13 +159,13 @@ namespace md {
 
             auto& tr_info = m_tracks_pos_vec[i];
 
-            auto &events = m_file_ptr->get_tracks()[i];
+            auto &events = m_file_ptr->get_tracks()[i].get_events();
 
             if (tr_info.m_event_id >= events.size()) {
                 continue;
             }
 
-            auto event = events[tr_info.m_event_id];
+            const auto &event = events[tr_info.m_event_id];
 
             if (!tr_info.m_read) {
                 // setting time to curr event if didn't yet read the event
@@ -177,22 +177,25 @@ namespace md {
 
     midi_player::EventInfo midi_player::m_get_next_event() const {
 
-        Event *event_ptr = nullptr;
+        event *event_ptr = nullptr;
         uint32_t min_time = UINT32_MAX;
         size_t sleep_time_til_next = SIZE_MAX;
         uint32_t pos = UINT32_MAX;
 
+        auto& tracks = m_file_ptr->get_tracks();
+
+        // get event, it is possible that here an event won't be found
         for (int i = 0; i < m_tracks_pos_vec.size(); ++i) {
 
             auto& p = m_tracks_pos_vec[i];
 
-            auto &events = m_file_ptr->get_tracks()[i];
+            auto &events = tracks[i].get_events();
 
             if (p.m_event_id >= events.size()) {
                 continue;
             }
 
-            Event &e = events[p.m_event_id];
+            event &e = events[p.m_event_id];
             const size_t &time = p.m_time;
 
             if (time <= min_time) {
@@ -201,32 +204,35 @@ namespace md {
                 pos = i;
             }
         }
+
         for (int i = 0; i < m_tracks_pos_vec.size(); ++i) {
             auto &p = m_tracks_pos_vec[i];
             auto &time = m_tracks_pos_vec[i].m_time;
-            auto &track = m_file_ptr->get_tracks()[i];
+            auto &track = m_file_ptr->get_tracks()[i].get_events();
+
             if (i == pos) {
                 auto next_ev_pos = p.m_event_id+1;
-                uint32_t next_time = UINT32_MAX;
+                size_t next_time = UINT32_MAX;
 
                 if(next_ev_pos < track.size()){
-                    next_time = time + track[next_ev_pos].dt();
+                    next_time = track[next_ev_pos].dt();
                 }
 
-                sleep_time_til_next = std::min(
-                        sleep_time_til_next,
-                        next_time - time
-                );
+                sleep_time_til_next = std::min(sleep_time_til_next,next_time);
                 continue;
             }
-            sleep_time_til_next = std::min(sleep_time_til_next,
-                                           time - min_time);
+
+            sleep_time_til_next = std::min(
+                    sleep_time_til_next,
+                    time - min_time
+            );
         }
 
-        sleep_time_til_next = sleep_time_til_next * m_tempo;
-
-        if(!event_ptr){
+        if(!event_ptr || sleep_time_til_next == UINT32_MAX){
             sleep_time_til_next = 16 * m_tempo;
+        }
+        else{
+            sleep_time_til_next = sleep_time_til_next * m_tempo;
         }
 
         return {event_ptr, sleep_time_til_next, pos};
@@ -316,6 +322,8 @@ namespace md {
             m_tracks_pos_vec[track_id].m_read = false;
             m_tracks_pos_vec[track_id].m_event_id += 1;
         }
+
+
         std::this_thread::sleep_for(std::chrono::microseconds(sleep_time));
 
         bool finished = event_ptr == nullptr;
@@ -324,6 +332,7 @@ namespace md {
 
     void midi_player::join_threads() {
         m_player_state = PlayerState::NO;
+        this->go_to(0);
         if(m_thread.joinable()){
             m_thread.join();
         }

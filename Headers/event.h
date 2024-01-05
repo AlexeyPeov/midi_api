@@ -9,14 +9,20 @@
 
 namespace md {
 
-    class Event {
+    class event {
     public:
 
-        Event() = default;
+        event() = default;
 
-        Event(uint32_t dt);
+        event(uint32_t dt);
 
-        Event(uint32_t dt, const std::vector<uint8_t>& msg);
+        event(uint32_t dt, const std::vector<uint8_t>& msg);
+
+        event(event&& other) noexcept;
+
+        event(const event& e) = default;
+
+        event& operator = (const event& e) = default;
 
         bool empty() const;
 

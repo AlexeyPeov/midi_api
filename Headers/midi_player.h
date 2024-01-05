@@ -1,5 +1,5 @@
-#ifndef MIDI_API_MIDIPLAYER_H
-#define MIDI_API_MIDIPLAYER_H
+#ifndef MIDI_API_MIDI_PLAYER_H
+#define MIDI_API_MIDI_PLAYER_H
 
 #include "DefaultMidiOutput.h"
 
@@ -16,7 +16,7 @@
 #include <memory>
 
 
-#include "File.h"
+#include "file.h"
 
 namespace md {
     class midi_player {
@@ -59,7 +59,7 @@ namespace md {
         };
 
         struct EventInfo{
-            Event* m_event_ptr = nullptr;
+            event* m_event_ptr = nullptr;
             size_t m_sleep_time = 0;
             size_t m_track_id = 0;
         };
@@ -85,9 +85,7 @@ namespace md {
 
         void m_setup_async_goto_vec();
 
-        void m_execute_event(const Event &event);
-
-        void m_player_loop();
+        void m_execute_event(const event &event);
 
         void m_increment_pos_ptr();
 

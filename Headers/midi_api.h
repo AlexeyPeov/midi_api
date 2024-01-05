@@ -1,10 +1,6 @@
 #ifndef MIDI_API_MIDI_API_H
 #define MIDI_API_MIDI_API_H
 
-namespace md{
-
-    
-
-}
+#include "midi_player.h"
 
 #endif //MIDI_API_MIDI_API_H

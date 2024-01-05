@@ -8,34 +8,34 @@
 #include <vector>
 #include <cmath>
 
-#include "Track.h"
+#include "track.h"
 #include "IOHelper.h"
 
 namespace md {
 
     class file {
     public:
+
         file();
 
         explicit file(const char *path);
 
-        void load(const char *path);
+        int load(const char *path);
 
         int save_as(const char *path) const;
 
-        void add_tracks(size_t amount);
+        uint16_t get_quarter_note_len() const;
 
-        uint16_t get_time_division() const;
+        [[nodiscard]] const std::vector<track>& get_tracks() const;
 
-        void set_quarter_note_len(uint16_t q_len);
+        std::vector<track>& get_tracks();
 
-        [[nodiscard]] const std::vector<Track>& get_tracks() const;
-
-        std::vector<Track>& get_tracks();
+        uint16_t get_qnl() const;
 
     private:
+
         uint16_t m_quarter_note_len;
-        std::vector<Track> m_tracks_vec;
+        std::vector<track> m_tracks_vec;
 
         void read_header_chunk(std::ifstream &file);
 
@@ -45,7 +45,7 @@ namespace md {
 
         static void read_event(
                 std::ifstream &file,
-                Event *event,
+                event *event,
                 bool *track_continue,
                 uint8_t *running_status
         );
@@ -54,12 +54,12 @@ namespace md {
 
         static void save_track_chunk(
                 std::ofstream &output_file,
-                const Track &track
+                const track &track
         ) ;
 
         static uint32_t save_event(
                 std::ofstream &output_file,
-                const Event &event,
+                const event &event,
                 uint8_t *last_cmd
         ) ;
 
