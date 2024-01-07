@@ -118,7 +118,8 @@ int main(){
 
     md::track& track = tracks[0];
 
-    md::bar bar;
+    
+    md::bar bar();
     
     // default is 4/4, meaning 4 quarter notes per beat / 4 beats per bar.
     // However, you can set this to whatever time sig you want (4/4, 6/8, 5/4, etc..)
@@ -133,51 +134,34 @@ int main(){
     const uint8_t turn_on = 90;
     const uint8_t turn_off = 0;
     
-    // qn_sz = quarter note size
-    // this value represents how many times 
-    // can we divide a quarter note.
-    // This is a constant value, set to 360.
-    // Reason is that 360 has a lot of divisors:
-    // 1, 2, 3, 4, 5, 6, 8, 9, 10, 12, 15, 18, 20, 24, 30, 36, 40, 45, 60, 72, 90, 120, 180, 360
-    // and it becomes easier to play with different time signatures.
-    uint32_t qn_sz = md::bar::get_qn_sz();
-
-    // you can access, and set individual events like so:
-    // bar[beat_index][quarter_note_index][/*between 0 and 360*/] += {note_on, c_note, turn_off};
-    // or so:
-    // bar[beat_index][quarter_note_index][/*between 0 and 360*/].push_back({note_on, c_note, turn_off});
-    
     // here is an example with 3/4 time signature
-    // there are 4 beats (0,1,2,3) and 3 quarter notes per each beat (0,1,2)
-    // and 361 (0-360) possible positions where we can insert an event within
-    // a quarter note
+    // there are 4 beats and 3 quarter notes per each beat
+    // track's delta_time (or quarter_note_length/qnl) is equal to file's qnl
     
-    // bar[0] - beat index
-    // bar[0][0] - individual quarter note within the beat
-    // bar[0][0][0] - individual minimal time event within the quarter note.
+    auto dt = file->get_qnl();
+    auto beat_len = dt * bar.qn_per_beat();
     
-    // bar[beat] is the same as bar[beat][0][0]
-    // bar[beat][qn] is the same as bar[beat][qn][0]
+    // you can access, and set individual events like so:
+    // bar[where] += {note_on, c_note, turn_off};
+    // or so:
+    // bar[where].push_back({note_on, c_note, turn_off});
     
     for(int i = 0; i < bar.beats_per_bar(); ++i){
 
-        bar[i] += {note_on, c_note, turn_on};
-        
-        // events at bar[n][m][qn_sz] will be played at the same time
-        // as bar[n+1][0][0]. This way borders of events are clearer.
-        bar[i][2][qn_sz] += {note_on, c_note, turn_off};
+        bar[i * beat_len] += {note_on, c_note, turn_on};
+        bar[(i+1) * beat_len] += {note_on, c_note, turn_off};
     
-        bar[i][1] += {note_on, e_note, turn_on};
-        bar[i][2] += {note_on, e_note, turn_off};
+        bar[(i * beat_len) + dt] += {note_on, e_note, turn_on};
+        bar[(i * beat_len) + dt*2] += {note_on, e_note, turn_off};
     
-        bar[i][1] += {note_on, g_note, turn_on};
-        bar[i][2] += {note_on, g_note, turn_off};
+        bar[(i * beat_len) + dt] += {note_on, g_note, turn_on};
+        bar[(i * beat_len) + dt*2] += {note_on, g_note, turn_off};
         
-        bar[i][2] += {note_on, e_note, turn_on};
-        bar[i][2][qn_sz] += {note_on, e_note, turn_off};
+        bar[(i * beat_len) + dt*2] += {note_on, e_note, turn_on};
+        bar[(i * beat_len) + dt*3] += {note_on, e_note, turn_off};
         
-        bar[i][2] += {note_on, g_note, turn_on};
-        bar[i][2][qn_sz] += {note_on, g_note, turn_off};
+        bar[(i * beat_len) + dt*2] += {note_on, g_note, turn_on};
+        bar[(i * beat_len) + dt*3] += {note_on, g_note, turn_off};
     
     }
     

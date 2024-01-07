@@ -6,14 +6,7 @@ namespace md {
 
         m_beats_per_bar = 4;
         m_quarter_notes_per_beat = 4;
-
-        m_beats.clear();
-
-        m_beats.resize(m_beats_per_bar);
-
-        for(auto& beat : m_beats){
-            beat.resize(m_quarter_notes_per_beat);
-        }
+        m_events_map.clear();
     }
 
     bar::~bar()= default;
@@ -21,7 +14,8 @@ namespace md {
     bar::bar(const bar& other){
         m_beats_per_bar = other.m_beats_per_bar;
         m_quarter_notes_per_beat = other.m_quarter_notes_per_beat;
-        m_beats = other.m_beats;
+        m_events_map = other.m_events_map;
+
     }
 
     bar& bar::operator=(const bar& other) = default;
@@ -29,13 +23,13 @@ namespace md {
     bar::bar(bar&& other) noexcept{
         m_beats_per_bar = other.m_beats_per_bar;
         m_quarter_notes_per_beat = other.m_quarter_notes_per_beat;
-        m_beats = std::move(other.m_beats);
+        m_events_map = std::move(other.m_events_map);
     }
 
     bar& bar::operator=(bar&& other) noexcept{
         m_beats_per_bar = other.m_beats_per_bar;
         m_quarter_notes_per_beat = other.m_quarter_notes_per_beat;
-        m_beats = std::move(other.m_beats);
+        m_events_map = std::move(other.m_events_map);
         return *this;
     }
 
@@ -45,33 +39,14 @@ namespace md {
     ) {
         m_beats_per_bar = beats_per_bar;
         m_quarter_notes_per_beat = quarter_notes_per_beat;
-
-        m_beats.clear();
-
-        m_beats.resize(m_beats_per_bar);
-        for(auto& beat : m_beats){
-            beat.resize(m_quarter_notes_per_beat);
-        }
+        m_events_map.clear();
     }
 
 
-    bar::beat& bar::operator[](size_t pos) {
-        assert(pos < m_beats.size());
-        return m_beats[pos];
+    bar::events& bar::operator[](size_t pos) {
+        return m_events_map[pos];
     }
 
-    const bar::beat & bar::operator[](size_t pos) const {
-        assert(pos < m_beats.size());
-        return m_beats[pos];
-    }
-
-    size_t bar::size() const {
-        return m_beats.size();
-    }
-
-    uint32_t bar::get_qn_sz() {
-        return m_qn_sz;
-    }
 
     const uint32_t bar::beats_per_bar() const {
         return m_beats_per_bar;
@@ -81,8 +56,11 @@ namespace md {
         return m_quarter_notes_per_beat;
     }
 
-    bar::events &bar::last_event() {
-        return m_beats[m_beats.size()-1][m_quarter_notes_per_beat-1][m_qn_sz];
+    std::map<size_t, bar::events> &bar::get_events_map() {
+        return m_events_map;
     }
 
+    const std::map<size_t, bar::events> &bar::get_events_map() const {
+        return m_events_map;
+    }
 }

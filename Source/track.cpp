@@ -8,55 +8,42 @@ namespace md {
 
     void track::add_bar(const bar &bar) {
 
-        auto bar_len = bar::get_qn_sz() * bar.qn_per_beat() * bar.beats_per_bar();
-        auto bar_qnl = bar::get_qn_sz();
-        size_t beats_amount = bar.size();
+        std::vector<event> events_vec;
+        events_vec.reserve(bar.get_events_map().size());
 
-        auto track_bar_len = m_qnl * bar.qn_per_beat() * bar.beats_per_bar();
+        int track_bar_len = m_qnl * bar.qn_per_beat() * bar.beats_per_bar();
 
-        uint32_t last_event_time = 0;
-        uint32_t curr_event_time = 0;
+        int last_event_time = 0;
+        int curr_event_time = 0;
 
-        uint32_t beat_len = bar_qnl * bar.qn_per_beat();
+        auto& events_map = bar.get_events_map();
 
+        for(auto& [time, events] : events_map){
 
-        for (size_t i = 0; i < beats_amount; ++i) {
+            for(auto& event : events){
 
-            size_t qn_amount = bar[i].size();
-
-            for (size_t j = 0; j < qn_amount; ++j) {
-
-                auto &event_map = bar[i][j];
-
-                for (auto &[pos, events]: event_map) {
-
-                    double mul = (double)(pos + (i*beat_len) + (j*bar_qnl)) / (double)bar_len;
-                    double time = (double)track_bar_len * mul;
-
-                    std::for_each(
-                            events.begin(), events.end(),
-                            [&](const auto &ev){
-
-                                // todo : possible redundant calculations
-                                last_event_time = curr_event_time;
-                                curr_event_time = (uint32_t)time;
-                                auto dt = curr_event_time - last_event_time;
-                                m_events.emplace_back(dt, ev);
-
-                            }
-                    );
-
-                }
+                last_event_time = curr_event_time;
+                curr_event_time = time;
+                auto dt = curr_event_time - last_event_time;
+                events_vec.emplace_back(dt, event);
 
             }
         }
 
-
-        if((track_bar_len - curr_event_time) != 0){
-            auto end_event = std::vector<uint8_t>{(uint8_t)MidiMessageType::NoteOn, 127, 0};
-            m_events.emplace_back(track_bar_len - curr_event_time, std::move(end_event));
+        if((track_bar_len - curr_event_time) < 0) {
+            std::cout << "wrong bar length at track::add_bar, "
+                         "should be less than or equal to beats_amount * delta_time * quarternotes_amount\n"
+                         "your length: " << curr_event_time << " max: " << track_bar_len;
+            return;
         }
 
+
+        if((track_bar_len - curr_event_time) > 0){
+            auto end_event = std::vector<uint8_t>{(uint8_t)MidiMessageType::NoteOn, 127, 0};
+            events_vec.emplace_back(track_bar_len - curr_event_time, std::move(end_event));
+        }
+
+        m_events.insert(m_events.end(), events_vec.begin(), events_vec.end());
     }
 
     std::vector<event> &track::get_events() {
