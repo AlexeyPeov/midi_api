@@ -119,7 +119,7 @@ int main(){
     md::track& track = tracks[0];
 
     
-    md::bar bar();
+    md::bar bar;
     
     // default is 4/4, meaning 4 quarter notes per beat / 4 beats per bar.
     // However, you can set this to whatever time sig you want (4/4, 6/8, 5/4, etc..)
@@ -168,6 +168,21 @@ int main(){
     // bar gets converted to series of events,
     // so don't add it to a track unless you're sure you won't edit it later.
     track.add_bar(bar);
+    
+    // if you want to play a bar, or a vector of bars, do it like so
+    player.set_bar(bar);
+
+    // single track
+    player.set_bars({ bar1, bar2, ... });
+
+    // multiple tracks.
+    player.set_bar_file(
+            {bar1},
+            {bar2},
+            ...
+    );
+        
+    player.play();
     
     file->save_as("testfile.mid");
 

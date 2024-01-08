@@ -64,7 +64,6 @@ namespace md {
             chunk_size += save_event(output_file, e, &last_cmd);
         }
 
-
         output_file.seekp(size_pos);
 
         IOHelper::write_as<uint32_t>(output_file, chunk_size);

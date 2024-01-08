@@ -57,6 +57,11 @@ namespace md {
 
     }
 
+    std::unique_ptr<file> midi_player::return_file() {
+        std::lock_guard<std::mutex> guard(m_mutex);
+        return std::move(m_file_ptr);
+    }
+
     void midi_player::set_bar(const md::bar& bar){
         set_bars({bar});
     }
@@ -200,7 +205,7 @@ namespace md {
 
     midi_player::EventInfo midi_player::m_get_next_event() const {
 
-        event *event_ptr = nullptr;
+        const event *event_ptr = nullptr;
         uint32_t min_time = UINT32_MAX;
         size_t sleep_time_til_next = SIZE_MAX;
         uint32_t pos = UINT32_MAX;
@@ -218,7 +223,7 @@ namespace md {
                 continue;
             }
 
-            event &e = events[p.m_event_id];
+            const event &e = events[p.m_event_id];
             const size_t &time = p.m_time;
 
             if (time <= min_time) {
@@ -361,9 +366,5 @@ namespace md {
         }
     }
 
-    std::unique_ptr<file> midi_player::return_file() {
-        std::lock_guard<std::mutex> guard(m_mutex);
-        return std::move(m_file_ptr);
-    }
 
 }

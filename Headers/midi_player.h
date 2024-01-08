@@ -66,7 +66,7 @@ namespace md {
         };
 
         struct EventInfo{
-            event* m_event_ptr = nullptr;
+            const event* m_event_ptr = nullptr;
             size_t m_sleep_time = 0;
             size_t m_track_id = 0;
         };
