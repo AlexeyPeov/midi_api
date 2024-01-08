@@ -15,7 +15,6 @@
 #include <mutex>
 #include <memory>
 
-
 #include "file.h"
 #include "bar.h"
 

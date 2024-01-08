@@ -115,7 +115,7 @@ namespace md {
 
     void midi_player::m_execute_event(const event &event) {
         if (event.is_meta()) {
-            if (event.is_meta(MidiMetaType::Tempo)) {
+            if (event.is_meta(meta_t::Tempo)) {
                 auto &msg = event.get_message_vec();
                 m_tempo = IOHelper::extract_tempo(msg[2], msg[3], msg[4]);
                 if (m_file_ptr) {

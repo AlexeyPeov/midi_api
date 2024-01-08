@@ -24,19 +24,23 @@ namespace md {
 
         event& operator = (const event& e) = default;
 
+        bool operator == (const event& other) const;
+
+        bool operator != (const event& other) const;
+
         bool empty() const;
 
         size_t size() const;
 
         uint32_t dt() const;
 
-        MidiMessageType get_msg_type() const;
+        msg_t get_msg_type() const;
 
-        MidiMetaType get_meta_type() const;
+        meta_t get_meta_type() const;
 
         bool is_voice_category() const;
 
-        bool is_voice_category(MidiMessageType type) const;
+        bool is_voice_category(msg_t type) const;
 
         bool is_system_common() const;
 
@@ -46,7 +50,7 @@ namespace md {
 
         bool is_meta() const;
 
-        bool is_meta(MidiMetaType meta_type) const;
+        bool is_meta(meta_t meta_type) const;
 
         bool contains_text() const;
 
