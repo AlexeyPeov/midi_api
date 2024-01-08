@@ -17,6 +17,7 @@
 
 
 #include "file.h"
+#include "bar.h"
 
 namespace md {
     class midi_player {
@@ -33,6 +34,12 @@ namespace md {
         void set_file(std::unique_ptr<file> file);
 
         std::unique_ptr<file> return_file();
+
+        void set_bar(const md::bar& bar);
+
+        void set_bars(const std::vector<md::bar>& bars);
+
+        void set_bar_file(const std::vector<std::vector<md::bar>>& file);
 
         void play();
 

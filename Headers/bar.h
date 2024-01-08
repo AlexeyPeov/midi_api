@@ -26,8 +26,8 @@ namespace md {
 
         bar &operator=(bar &&other) noexcept;
 
-        void set_time_signature(uint32_t beats_per_bar,
-                                uint32_t quarter_notes_per_beat);
+        void set_time_signature(uint32_t quarter_notes_per_beat,
+                                uint32_t beats_per_bar);
 
 
         // a vector of events at position

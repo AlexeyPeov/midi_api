@@ -57,6 +57,29 @@ namespace md {
 
     }
 
+    void midi_player::set_bar(const md::bar& bar){
+        set_bars({bar});
+    }
+
+    void midi_player::set_bars(const std::vector<md::bar>& bars){
+        set_bar_file({bars});
+    }
+
+    void midi_player::set_bar_file(const std::vector<std::vector<md::bar>>& file){
+
+        auto file_ptr = std::make_unique<md::file>();
+        auto& file_tracks = file_ptr->get_tracks();
+        for(auto& bars_vec : file){
+            file_tracks.emplace_back(file_ptr->get_qnl());
+            auto& track = file_tracks.back();
+
+            for(auto& bar : bars_vec){
+                track.add_bar(bar);
+            }
+        }
+        set_file(std::move(file_ptr));
+    }
+
     void midi_player::m_setup_async_goto_vec(){
 
         auto& tracks = m_file_ptr->get_tracks();
