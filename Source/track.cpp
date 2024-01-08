@@ -33,8 +33,6 @@ namespace md {
             std::cout << "wrong bar length at track::add_bar, "
                          "should be less than or equal to beats_amount * delta_time * quarternotes_amount\n"
                          "your length: " << curr_event_time << " max: " << track_bar_len << '\n';
-
-                         "your length: " << curr_event_time << " max: " << track_bar_len;
             return;
         }
 
