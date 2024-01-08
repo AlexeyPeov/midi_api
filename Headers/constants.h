@@ -216,7 +216,7 @@ namespace md{
         kUndefined = 128
     };
 
-    enum class MidiMessageType {
+    enum msg_t : uint8_t {
         UNDEFINED = 0x00,
         // voice
         NoteOff = 0x80,
@@ -248,7 +248,7 @@ namespace md{
         Meta = 0xff
     };
 
-    enum class MidiMetaType {
+    enum meta_t : uint8_t {
         SequenceNumber = 0x00,  // size 2
         Text = 0x01,
         Copyright = 0x02,

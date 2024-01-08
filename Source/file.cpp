@@ -64,6 +64,10 @@ namespace md {
             chunk_size += save_event(output_file, e, &last_cmd);
         }
 
+        // end of track
+        if(track.get_events().back() != event(0, {msg_t::Meta, meta_t::EndOfTrack, 0})){
+            chunk_size += save_event(output_file, event(0,{msg_t::Meta, meta_t::EndOfTrack, 0}), &last_cmd);
+        }
 
         output_file.seekp(size_pos);
 
@@ -299,37 +303,37 @@ namespace md {
         auto on_meta_event = [&](auto &meta_event_type) {
             auto str_len = IOHelper::read_as<uint8_t>(file);
 
-            if ((meta_event_type == MidiMetaType::SequenceNumber) &&
+            if ((meta_event_type == meta_t::SequenceNumber) &&
                 (str_len != 2)) {
                 std::cerr << "sequence number event size is not 2 but "
                           << str_len << '\n';
             }
 
-            if ((meta_event_type == MidiMetaType::ChannelPrefix) &&
+            if ((meta_event_type == meta_t::ChannelPrefix) &&
                 (str_len != 1)) {
                 std::cerr << "channel prefix event size is not 1 but" << str_len
                           << '\n';
             }
 
 
-            if ((meta_event_type == MidiMetaType::OutputCable) &&
+            if ((meta_event_type == meta_t::OutputCable) &&
                 (str_len != 1)) {
                 std::cerr << "output cable event size is not 1 but" << str_len
                           << '\n';
             }
 
-            if ((meta_event_type == MidiMetaType::Tempo) && (str_len != 3)) {
+            if ((meta_event_type == meta_t::Tempo) && (str_len != 3)) {
                 std::cerr << "tempo event size is not 3 but" << str_len << '\n';
             }
 
 
-            if ((meta_event_type == MidiMetaType::SmpteOffset) &&
+            if ((meta_event_type == meta_t::SmpteOffset) &&
                 (str_len != 5)) {
                 std::cerr << "SMPTE offset event size is not 5 but " << str_len
                           << '\n';
             }
 
-            if (meta_event_type == MidiMetaType::EndOfTrack) {
+            if (meta_event_type == meta_t::EndOfTrack) {
 
                 if (str_len != 0) {
                     std::cerr << "end of track event size is not 0 but "
@@ -347,30 +351,30 @@ namespace md {
         };
 
         auto meta_or_sysex_events = [&]() {
-            auto command = MidiMessageType(cmd);
+            auto command = msg_t(cmd);
             switch (command) {
-                case MidiMessageType::Meta:  // META events
+                case msg_t::Meta:  // META events
                 {
                     auto val = IOHelper::read_as<uint8_t>(file);
-                    auto meta_event_type = MidiMetaType(val);
+                    auto meta_event_type = meta_t(val);
                     message_vec.emplace_back(val);
 
                     switch (meta_event_type) {
-                        case MidiMetaType::SequenceNumber:  // size always 2
-                        case MidiMetaType::Text:
-                        case MidiMetaType::Copyright:
-                        case MidiMetaType::TrackName:
-                        case MidiMetaType::InstrumentName:
-                        case MidiMetaType::Lyrics:
-                        case MidiMetaType::Marker:
-                        case MidiMetaType::CuePoint:
-                        case MidiMetaType::ChannelPrefix:  // size always 1
-                        case MidiMetaType::OutputCable:    // size always 1
-                        case MidiMetaType::EndOfTrack:     // size always 0
-                        case MidiMetaType::Tempo:          // size always 3
-                        case MidiMetaType::SmpteOffset:    // size always 5
-                        case MidiMetaType::TimeSignature:
-                        case MidiMetaType::KeySignature:
+                        case meta_t::SequenceNumber:  // size always 2
+                        case meta_t::Text:
+                        case meta_t::Copyright:
+                        case meta_t::TrackName:
+                        case meta_t::InstrumentName:
+                        case meta_t::Lyrics:
+                        case meta_t::Marker:
+                        case meta_t::CuePoint:
+                        case meta_t::ChannelPrefix:  // size always 1
+                        case meta_t::OutputCable:    // size always 1
+                        case meta_t::EndOfTrack:     // size always 0
+                        case meta_t::Tempo:          // size always 3
+                        case meta_t::SmpteOffset:    // size always 5
+                        case meta_t::TimeSignature:
+                        case meta_t::KeySignature:
                             on_meta_event(meta_event_type);
                             break;
                         default:
@@ -380,8 +384,8 @@ namespace md {
                     }
                     break;
                 }
-                case MidiMessageType::SysExBegin:
-                case MidiMessageType::SysExEnd: {
+                case msg_t::SysExBegin:
+                case msg_t::SysExEnd: {
                     uint32_t size = IOHelper::get_variable_len_quantity(file);
                     for (unsigned int i = 0; i < size; i++)
                         message_vec.emplace_back(
@@ -391,25 +395,25 @@ namespace md {
             }
         };
         // control events
-        auto msg = MidiMessageType(cmd & 0xf0);
+        auto msg = msg_t(cmd & 0xf0);
 
         switch (msg) {
             // two parameter events
-            case MidiMessageType::NoteOn:
-            case MidiMessageType::NoteOff:
-            case MidiMessageType::NoteAftertouch:
-            case MidiMessageType::ControlChange:
-            case MidiMessageType::PitchWheel:
+            case msg_t::NoteOn:
+            case msg_t::NoteOff:
+            case msg_t::NoteAftertouch:
+            case msg_t::ControlChange:
+            case msg_t::PitchWheel:
                 two_param_events();
                 break;
 
                 // one parameter events
-            case MidiMessageType::ProgramChange:
-            case MidiMessageType::ChannelAftertouch:
+            case msg_t::ProgramChange:
+            case msg_t::ChannelAftertouch:
                 one_param_events();
                 break;
 
-            case MidiMessageType::SysExBegin:
+            case msg_t::SysExBegin:
                 meta_or_sysex_events();
                 break;
 

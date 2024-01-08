@@ -29,17 +29,24 @@ namespace md {
 
             }
         }
+<<<<<<< HEAD
+        if((track_bar_len - curr_event_time) < 0) {
+            std::cout << "wrong bar length at track::add_bar, "
+                         "should be less than or equal to beats_amount * delta_time * quarternotes_amount\n"
+                         "your length: " << curr_event_time << " max: " << track_bar_len << '\n';
+=======
 
         if((track_bar_len - curr_event_time) < 0) {
             std::cout << "wrong bar length at track::add_bar, "
                          "should be less than or equal to beats_amount * delta_time * quarternotes_amount\n"
                          "your length: " << curr_event_time << " max: " << track_bar_len;
+>>>>>>> parent of 4454c4a (moved to midi_api)
             return;
         }
 
 
         if((track_bar_len - curr_event_time) > 0){
-            auto end_event = std::vector<uint8_t>{(uint8_t)MidiMessageType::NoteOn, 127, 0};
+            auto end_event = std::vector<uint8_t>{msg_t::NoteOn, 127, 0};
             events_vec.emplace_back(track_bar_len - curr_event_time, std::move(end_event));
         }
 
