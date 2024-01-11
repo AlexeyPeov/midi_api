@@ -2,8 +2,8 @@
 
 namespace md {
 
-    track::track(uint32_t qnl){
-        m_qnl = qnl;
+    track::track(uint32_t time_div){
+        m_time_div = time_div;
     };
 
     void track::add_bar(const bar &bar) {
@@ -11,27 +11,27 @@ namespace md {
         std::vector<event> events_vec;
         events_vec.reserve(bar.get_events_map().size());
 
-        int track_bar_len = m_qnl * bar.qn_per_beat() * bar.beats_per_bar();
+        // m_time_div = length of a quarter note.
+        uint32_t step_len = (m_time_div*4) / bar.beats_per_bar();
 
-        int last_event_time = 0;
-        int curr_event_time = 0;
+        uint32_t track_bar_len = step_len * bar.steps_per_beat();
+
+        uint32_t last_event_time = 0;
+        uint32_t curr_event_time = 0;
 
         auto& events_map = bar.get_events_map();
 
         for(auto& [time, events] : events_map){
-
             for(auto& event : events){
-
                 last_event_time = curr_event_time;
                 curr_event_time = time;
                 auto dt = curr_event_time - last_event_time;
                 events_vec.emplace_back(dt, event);
-
             }
         }
-        if((track_bar_len - curr_event_time) < 0) {
+        if(((int)track_bar_len - (int)curr_event_time) < 0) {
             std::cout << "wrong bar length at track::add_bar, "
-                         "should be less than or equal to beats_amount * delta_time * quarternotes_amount\n"
+                         "should be less than or equal to step_len * steps_amount\n"
                          "your length: " << curr_event_time << " max: " << track_bar_len << '\n';
             return;
         }

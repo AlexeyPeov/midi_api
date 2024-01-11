@@ -34,11 +34,11 @@ namespace md {
 
         std::unique_ptr<file> return_file();
 
-        void set_bar(const md::bar& bar);
+        void set_bars(const md::bar& bar);
 
         void set_bars(const std::vector<md::bar>& bars);
 
-        void set_bar_file(const std::vector<std::vector<md::bar>>& file);
+        void set_bars(const std::vector<std::vector<md::bar>>& file);
 
         void play();
 

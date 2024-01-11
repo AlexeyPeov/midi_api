@@ -12,15 +12,15 @@ namespace md {
     }
 
     file::file() {
-        m_quarter_note_len = 500;
+        m_tive_div = 500;
     }
 
     file::file(const char *path) {
-        m_quarter_note_len = 500;
+        m_tive_div = 500;
         load(path);
     }
 
-    int file::save_as(const char *path) const {
+    int file::save_as(const std::string& path) const {
         std::ofstream out_file(path, std::ios_base::binary);
 
         if (!out_file.good()) {
@@ -144,11 +144,11 @@ namespace md {
         IOHelper::write_as<uint16_t>(output_file, static_cast<uint16_t>(tr_sz));
 
         // save time division
-        IOHelper::write_as<uint16_t>(output_file, m_quarter_note_len);
+        IOHelper::write_as<uint16_t>(output_file, m_tive_div);
     }
 
 
-    int file::load(const char *path) {
+    int file::load(const std::string& path) {
         std::ifstream file(path, std::ifstream::in | std::ifstream::binary);
 
         if (!file.is_open()) {
@@ -227,10 +227,11 @@ namespace md {
         m_tracks_vec.reserve(tracks_num);
 
         // read time division
-        m_quarter_note_len = IOHelper::read_as<uint16_t>(file);
+        m_tive_div = IOHelper::read_as<uint16_t>(file);
         // check time division
-        if (m_quarter_note_len & 0x8000)
+        if (m_tive_div & 0x8000){
             std::cerr << "unsupported MIDI file time division" << '\n';
+        }
     }
 
     void file::read_unknown_chunk(std::ifstream &file) {
@@ -240,7 +241,7 @@ namespace md {
     }
 
     void file::read_track_chunk(std::ifstream &file) {
-        m_tracks_vec.emplace_back(m_quarter_note_len);
+        m_tracks_vec.emplace_back(m_tive_div);
         track& track = m_tracks_vec.back();
 
         auto chunk_size = IOHelper::read_as<uint32_t>(file);
@@ -424,12 +425,8 @@ namespace md {
         }
     }
 
-    uint16_t file::get_quarter_note_len() const {
-        return m_quarter_note_len;
-    }
-
-    uint16_t file::get_qnl() const {
-        return m_quarter_note_len;
+    uint16_t file::get_time_div() const {
+        return m_tive_div;
     }
 
 }

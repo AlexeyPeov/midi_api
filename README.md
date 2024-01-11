@@ -109,81 +109,93 @@ int main(){
 
 ```c++
     std::unique_ptr<md::file> file = std::make_unique<md::file>();
-    
-    // qnl = quarter note length (in milliseconds)
-    const uint16_t qnl = file->get_qnl();
 
-    // add 1 track to a file (get_tracks() returns a reference to std::vector<md::track>) 
-    file->get_tracks().emplace_back(qnl);
-
-    md::track& track = tracks[0];
-
+    // time_div = number of MIDI ticks per quarter note
+    const uint16_t time_div = file->get_time_div();
     
-    md::bar bar;
+    // add 1 track to a file (get_tracks() returns a reference to std::vector<md::track>)
+    file->get_tracks().emplace_back(time_div);
     
-    // default is 4/4, meaning 4 quarter notes per beat / 4 beats per bar.
-    // However, you can set this to whatever time sig you want (4/4, 6/8, 5/4, etc..)
-    bar.set_time_signature(3,4);
+    md::track& track = file->get_tracks()[0];
     
-    const auto note_on = (uint8_t)md::MidiMessageType::NoteOn;
-    const auto c_note = (uint8_t)md::note::C5;
-    const auto e_note = (uint8_t)md::note::E5;
-    const auto g_note = (uint8_t)md::note::G5;
+    std::vector<md::bar> bars;
+    bars.resize(4);
     
-    // note volume
+    auto add_note = [](uint8_t note, uint8_t volume) -> std::vector<uint8_t>{
+        return {md::msg_t::NoteOn, note, volume};
+    };
+    
+    // notes
+    const uint8_t c_note = md::note::C5;
+    const uint8_t e_note = md::note::E5;
+    const uint8_t g_note = md::note::G5;
+    
+    // note volumes (if you set volume to zero, a note turns off)
     const uint8_t turn_on = 90;
     const uint8_t turn_off = 0;
     
-    // here is an example with 3/4 time signature
-    // there are 4 beats and 3 quarter notes per each beat
-    // track's delta_time (or quarter_note_length/qnl) is equal to file's qnl
-    
-    auto dt = file->get_qnl();
-    auto beat_len = dt * bar.qn_per_beat();
-    
-    // you can access, and set individual events like so:
-    // bar[where] += {note_on, c_note, turn_off};
-    // or so:
-    // bar[where].push_back({note_on, c_note, turn_off});
-    
-    for(int i = 0; i < bar.beats_per_bar(); ++i){
-
-        bar[i * beat_len] += {note_on, c_note, turn_on};
-        bar[(i+1) * beat_len] += {note_on, c_note, turn_off};
-    
-        bar[(i * beat_len) + dt] += {note_on, e_note, turn_on};
-        bar[(i * beat_len) + dt*2] += {note_on, e_note, turn_off};
-    
-        bar[(i * beat_len) + dt] += {note_on, g_note, turn_on};
-        bar[(i * beat_len) + dt*2] += {note_on, g_note, turn_off};
+    // bar sets time signature to 4/4 in a default constructor,
+    // meaning 4 steps per beat, each step is a quarter note.
+    // However, you can set time signature (4/4, 6/8, 5/4, etc..)
+    for(auto& bar : bars){
         
-        bar[(i * beat_len) + dt*2] += {note_on, e_note, turn_on};
-        bar[(i * beat_len) + dt*3] += {note_on, e_note, turn_off};
+        // this means 5 steps per bar, each step is an eighth note
+        bar.set_time_signature(5,8);
         
-        bar[(i * beat_len) + dt*2] += {note_on, g_note, turn_on};
-        bar[(i * beat_len) + dt*3] += {note_on, g_note, turn_off};
-    
+        // since each step is an eighth note, not a quarter note,
+        // we need take that into account
+        uint32_t step_len = bar.get_step_len(file->get_time_div());
+        
+        // you can access, and set individual events like so:
+        // bar[where] += {md::msg_t::NoteOn, c_note, turn_off};
+        // or so:
+        // bar[where].push_back({md::msg_t::NoteOn, c_note, turn_off});
+        
+        // in my case I have add_note method, so I will add events like this:
+        // bar[where] += add_note(c_note, turn_on);
+        
+        // event at zero
+        bar[0] += add_note(c_note, turn_on);
+        
+        // last event of a bar
+        bar[step_len * bar.steps_per_beat()] += add_note(c_note, turn_off);
+        
+        for(int j = 1; j < bar.steps_per_beat(); ++j){
+            
+            bar[step_len * j] += add_note(e_note, turn_on);
+            bar[step_len * (j+1)] += add_note(e_note, turn_off);
+            
+            bar[step_len * j] += add_note(g_note, turn_on);
+            bar[step_len * (j+1)] += add_note(g_note, turn_off);
+            
+        }
+        
+        // bar gets converted to series of events,
+        // so don't add it to a track unless you're sure you won't edit it later.
+        track.add_bar(bar);
+        
     }
     
-    // bar gets converted to series of events,
-    // so don't add it to a track unless you're sure you won't edit it later.
-    track.add_bar(bar);
+    md::midi_player player;
     
-    // if you want to play a bar, or a vector of bars, do it like so
-    player.set_bar(bar);
-
-    // single track
-    player.set_bars({ bar1, bar2, ... });
-
-    // multiple tracks.
-    player.set_bar_file(
-            {bar1},
-            {bar2},
-            ...
-    );
+    // if you want to play a bar:
+        // function takes const bar&
+        player.set_bars(bars[0]);
         
+    // if you want to play a vector of bars (basically, a track):
+    std::vector<md::bar>& track1 = bars;
+    // function takes const std::vector<bar>&
+    player.set_bars(track1);
+    
+    // adding multiple tracks.
+    std::vector<md::bar> track2 = bars;
+    // function takes const std::vector<std::vector<md::bar>>&
+    player.set_bars({ track1, track2 });
+    
     player.play();
     
+    // you can actually convert your bars to a file this way!
+    file = player.return_file();
     file->save_as("testfile.mid");
 
 ```

@@ -5,15 +5,20 @@ namespace md {
     bar::bar(){
 
         m_beats_per_bar = 4;
-        m_quarter_notes_per_beat = 4;
+        m_steps_per_beat = 4;
         m_events_map.clear();
+        // not sure..
+        //uint8_t meta = msg_t::Meta;
+        //uint8_t time_sig = meta_t::TimeSignature;
+        //uint8_t size = 4;
+        //m_events_map[0].emplace_back({meta,time_sig,size,m_steps_per_beat,(uint8_t)std::sqrt(m_beats_per_bar),})
     }
 
     bar::~bar()= default;
 
     bar::bar(const bar& other){
         m_beats_per_bar = other.m_beats_per_bar;
-        m_quarter_notes_per_beat = other.m_quarter_notes_per_beat;
+        m_steps_per_beat = other.m_steps_per_beat;
         m_events_map = other.m_events_map;
 
     }
@@ -22,23 +27,23 @@ namespace md {
 
     bar::bar(bar&& other) noexcept{
         m_beats_per_bar = other.m_beats_per_bar;
-        m_quarter_notes_per_beat = other.m_quarter_notes_per_beat;
+        m_steps_per_beat = other.m_steps_per_beat;
         m_events_map = std::move(other.m_events_map);
     }
 
     bar& bar::operator=(bar&& other) noexcept{
         m_beats_per_bar = other.m_beats_per_bar;
-        m_quarter_notes_per_beat = other.m_quarter_notes_per_beat;
+        m_steps_per_beat = other.m_steps_per_beat;
         m_events_map = std::move(other.m_events_map);
         return *this;
     }
 
     void bar::set_time_signature(
-            uint32_t quarter_notes_per_beat,
-            uint32_t beats_per_bar
+            uint8_t steps_per_beat,
+            uint8_t beats_per_bar
     ) {
         m_beats_per_bar = beats_per_bar;
-        m_quarter_notes_per_beat = quarter_notes_per_beat;
+        m_steps_per_beat = steps_per_beat;
         m_events_map.clear();
     }
 
@@ -52,8 +57,8 @@ namespace md {
         return m_beats_per_bar;
     }
 
-    const uint32_t bar::qn_per_beat() const {
-        return m_quarter_notes_per_beat;
+    const uint32_t bar::steps_per_beat() const {
+        return m_steps_per_beat;
     }
 
     std::map<size_t, bar::events> &bar::get_events_map() {
@@ -62,5 +67,9 @@ namespace md {
 
     const std::map<size_t, bar::events> &bar::get_events_map() const {
         return m_events_map;
+    }
+
+    uint32_t bar::get_step_len(uint32_t time_div) const {
+        return (time_div * 4) / m_beats_per_bar;
     }
 }

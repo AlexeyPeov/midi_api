@@ -4,7 +4,7 @@ namespace md {
 
 
     midi_player::midi_player(bool async) {
-        m_tempo = 1000;
+        m_tempo = 500000/500;
         m_file_ptr = nullptr;
         m_output = std::make_unique<DefaultMidiOutput>();
         midi_player::m_setup_windows_timers();
@@ -40,7 +40,7 @@ namespace md {
 
         std::lock_guard<std::mutex> guard(m_mutex);
         m_output->reset();
-        m_tempo = 1000;
+        m_tempo = 500000 / 500;
         m_max_time = 0;
         m_file_ptr = std::move(file);
 
@@ -62,20 +62,20 @@ namespace md {
         return std::move(m_file_ptr);
     }
 
-    void midi_player::set_bar(const md::bar& bar){
+    void midi_player::set_bars(const md::bar& bar){
         set_bars({bar});
     }
 
     void midi_player::set_bars(const std::vector<md::bar>& bars){
-        set_bar_file({bars});
+        set_bars({bars});
     }
 
-    void midi_player::set_bar_file(const std::vector<std::vector<md::bar>>& file){
+    void midi_player::set_bars(const std::vector<std::vector<md::bar>>& file){
 
         auto file_ptr = std::make_unique<md::file>();
         auto& file_tracks = file_ptr->get_tracks();
         for(auto& bars_vec : file){
-            file_tracks.emplace_back(file_ptr->get_qnl());
+            file_tracks.emplace_back(file_ptr->get_time_div());
             auto& track = file_tracks.back();
 
             for(auto& bar : bars_vec){
@@ -119,7 +119,7 @@ namespace md {
                 auto &msg = event.get_message_vec();
                 m_tempo = IOHelper::extract_tempo(msg[2], msg[3], msg[4]);
                 if (m_file_ptr) {
-                    m_tempo /= m_file_ptr->get_quarter_note_len();
+                    m_tempo /= m_file_ptr->get_time_div();
                 }
             }
             return;  // handle other META events(i ignore them, i dont care)

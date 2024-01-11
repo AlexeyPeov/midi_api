@@ -18,7 +18,7 @@ namespace md {
     class track {
     public:
 
-        track(uint32_t qnl);
+        track(uint32_t time_div);
 
         void add_bar(const bar& bar);
 
@@ -32,7 +32,7 @@ namespace md {
 
     private:
         std::vector<event> m_events;
-        uint32_t m_qnl;
+        uint32_t m_time_div;
     };
 
 }

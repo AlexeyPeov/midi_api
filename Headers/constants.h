@@ -217,7 +217,7 @@ namespace md{
     };
 
     enum msg_t : uint8_t {
-        UNDEFINED = 0x00,
+        UNDEFINED_MSG_T = 0x00,
         // voice
         NoteOff = 0x80,
         NoteOn = 0x90,
@@ -267,8 +267,8 @@ namespace md{
         NO = 0x66
     };
 
-    enum class note{
-        UNDEFINED = 128,
+    enum note : uint8_t {
+        UNDEFINED_NOTE = 128,
 
         C0 = 0,
         C0s = 1,

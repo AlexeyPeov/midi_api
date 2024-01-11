@@ -33,7 +33,7 @@ namespace md{
         if (!m_message_vec.empty()){
             return static_cast<msg_t>(m_message_vec[0]);
         }
-        return msg_t::UNDEFINED;
+        return msg_t::UNDEFINED_MSG_T;
     }
 
     bool event::is_meta() const {

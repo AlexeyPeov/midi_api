@@ -7,6 +7,7 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <string>
 
 #include "track.h"
 #include "IOHelper.h"
@@ -20,21 +21,19 @@ namespace md {
 
         explicit file(const char *path);
 
-        int load(const char *path);
+        int load(const std::string& path);
 
-        int save_as(const char *path) const;
-
-        uint16_t get_quarter_note_len() const;
+        int save_as(const std::string& path) const;
 
         [[nodiscard]] const std::vector<track>& get_tracks() const;
 
         std::vector<track>& get_tracks();
 
-        uint16_t get_qnl() const;
+        uint16_t get_time_div() const;
 
     private:
 
-        uint16_t m_quarter_note_len;
+        uint16_t m_tive_div;
         std::vector<track> m_tracks_vec;
 
         void read_header_chunk(std::ifstream &file);
