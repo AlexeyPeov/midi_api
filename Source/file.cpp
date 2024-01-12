@@ -65,7 +65,8 @@ namespace md {
         }
 
         // end of track
-        if(track.get_events().back() != event(0, {msg_t::Meta, meta_t::EndOfTrack, 0})){
+
+        if(track.get_events().empty() || track.get_events().back() != event(0, {msg_t::Meta, meta_t::EndOfTrack, 0})){
             chunk_size += save_event(output_file, event(0,{msg_t::Meta, meta_t::EndOfTrack, 0}), &last_cmd);
         }
 
