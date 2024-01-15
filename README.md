@@ -111,7 +111,7 @@ int main(){
     std::unique_ptr<md::file> file = std::make_unique<md::file>();
 
     // time_div = number of MIDI ticks per quarter note
-    const uint16_t time_div = file->get_time_div();
+    const uint16_t time_div = file->get_ppq();
     
     // add 1 track to a file (get_tracks() returns a reference to std::vector<md::track>)
     file->get_tracks().emplace_back(time_div);
@@ -144,7 +144,7 @@ int main(){
         
         // since each step is an eighth note, not a quarter note,
         // we need take that into account
-        uint32_t step_len = bar.get_step_len(file->get_time_div());
+        uint32_t step_len = bar.get_step_len(file->get_ppq());
         
         // you can access, and set individual events like so:
         // bar[where] += {md::msg_t::NoteOn, c_note, turn_off};
