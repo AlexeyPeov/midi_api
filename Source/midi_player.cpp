@@ -75,7 +75,7 @@ namespace md {
         auto file_ptr = std::make_unique<md::file>();
         auto& file_tracks = file_ptr->get_tracks();
         for(auto& bars_vec : file){
-            file_tracks.emplace_back(file_ptr->get_time_div());
+            file_tracks.emplace_back(file_ptr->get_ppq());
             auto& track = file_tracks.back();
 
             for(auto& bar : bars_vec){
@@ -119,7 +119,7 @@ namespace md {
                 auto &msg = event.get_message_vec();
                 m_tempo = IOHelper::extract_tempo(msg[2], msg[3], msg[4]);
                 if (m_file_ptr) {
-                    m_tempo /= m_file_ptr->get_time_div();
+                    m_tempo /= m_file_ptr->get_ppq();
                 }
             }
             return;  // handle other META events(i ignore them, i dont care)

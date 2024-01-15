@@ -29,11 +29,11 @@ namespace md {
 
         std::vector<track>& get_tracks();
 
-        uint16_t get_time_div() const;
+        uint16_t get_ppq() const;
 
     private:
 
-        uint16_t m_tive_div;
+        uint16_t m_ppq;
         std::vector<track> m_tracks_vec;
 
         void read_header_chunk(std::ifstream &file);

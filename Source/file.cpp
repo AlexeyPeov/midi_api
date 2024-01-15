@@ -12,11 +12,11 @@ namespace md {
     }
 
     file::file() {
-        m_tive_div = 500;
+        m_ppq = 96;
     }
 
     file::file(const char *path) {
-        m_tive_div = 500;
+        m_ppq = 96;
         load(path);
     }
 
@@ -145,7 +145,7 @@ namespace md {
         IOHelper::write_as<uint16_t>(output_file, static_cast<uint16_t>(tr_sz));
 
         // save time division
-        IOHelper::write_as<uint16_t>(output_file, m_tive_div);
+        IOHelper::write_as<uint16_t>(output_file, m_ppq);
     }
 
 
@@ -228,9 +228,9 @@ namespace md {
         m_tracks_vec.reserve(tracks_num);
 
         // read time division
-        m_tive_div = IOHelper::read_as<uint16_t>(file);
+        m_ppq = IOHelper::read_as<uint16_t>(file);
         // check time division
-        if (m_tive_div & 0x8000){
+        if (m_ppq & 0x8000){
             std::cerr << "unsupported MIDI file time division" << '\n';
         }
     }
@@ -242,7 +242,7 @@ namespace md {
     }
 
     void file::read_track_chunk(std::ifstream &file) {
-        m_tracks_vec.emplace_back(m_tive_div);
+        m_tracks_vec.emplace_back(m_ppq);
         track& track = m_tracks_vec.back();
 
         auto chunk_size = IOHelper::read_as<uint32_t>(file);
@@ -426,8 +426,8 @@ namespace md {
         }
     }
 
-    uint16_t file::get_time_div() const {
-        return m_tive_div;
+    uint16_t file::get_ppq() const {
+        return m_ppq;
     }
 
 }

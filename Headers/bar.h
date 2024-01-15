@@ -17,6 +17,8 @@ namespace md {
 
         explicit bar();
 
+        bar(uint8_t steps_per_beat, uint8_t beats_per_bar);
+
         ~bar();
 
         bar(const bar &other);

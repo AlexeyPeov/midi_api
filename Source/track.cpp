@@ -11,10 +11,7 @@ namespace md {
         std::vector<event> events_vec;
         events_vec.reserve(bar.get_events_map().size());
 
-        // m_time_div = length of a quarter note.
-        uint32_t step_len = (m_time_div*4) / bar.beats_per_bar();
-
-        uint32_t track_bar_len = step_len * bar.steps_per_beat();
+        uint32_t track_bar_len = m_time_div * bar.steps_per_beat() * (bar.beats_per_bar() / 4);
 
         uint32_t last_event_time = 0;
         uint32_t curr_event_time = 0;
@@ -33,7 +30,6 @@ namespace md {
             std::cout << "wrong bar length at track::add_bar, "
                          "should be less than or equal to step_len * steps_amount\n"
                          "your length: " << curr_event_time << " max: " << track_bar_len << '\n';
-            return;
         }
 
 
@@ -43,6 +39,12 @@ namespace md {
         }
 
         m_events.insert(m_events.end(), events_vec.begin(), events_vec.end());
+    }
+
+    void track::add_bars(const std::vector<bar> &bars) {
+        for(const md::bar& b : bars){
+            add_bar(b);
+        }
     }
 
     std::vector<event> &track::get_events() {
@@ -60,5 +62,6 @@ namespace md {
     void track::clear() {
         m_events.clear();
     }
+
 
 }

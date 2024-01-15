@@ -22,6 +22,8 @@ namespace md {
 
         void add_bar(const bar& bar);
 
+        void add_bars(const std::vector<bar>& bars);
+
         std::vector<event>& get_events();
 
         const std::vector<event>& get_events() const;

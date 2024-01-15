@@ -14,6 +14,11 @@ namespace md {
         //m_events_map[0].emplace_back({meta,time_sig,size,m_steps_per_beat,(uint8_t)std::sqrt(m_beats_per_bar),})
     }
 
+    bar::bar(uint8_t steps_per_beat, uint8_t beats_per_bar){
+        m_steps_per_beat = steps_per_beat;
+        m_beats_per_bar = beats_per_bar;
+    }
+
     bar::~bar()= default;
 
     bar::bar(const bar& other){
@@ -44,7 +49,6 @@ namespace md {
     ) {
         m_beats_per_bar = beats_per_bar;
         m_steps_per_beat = steps_per_beat;
-        m_events_map.clear();
     }
 
 
@@ -70,6 +74,7 @@ namespace md {
     }
 
     uint32_t bar::get_step_len(uint32_t time_div) const {
-        return (time_div * 4) / m_beats_per_bar;
+        //return (time_div * 4) / m_beats_per_bar;
+        return time_div;
     }
 }
