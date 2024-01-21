@@ -63,11 +63,13 @@ namespace md {
     }
 
     void midi_player::set_bars(const md::bar& bar){
-        set_bars({bar});
+        std::vector<md::bar> bars = {bar};
+        set_bars(bars);
     }
 
     void midi_player::set_bars(const std::vector<md::bar>& bars){
-        set_bars({bars});
+        std::vector<std::vector<md::bar>> b = {bars};
+        set_bars(b);
     }
 
     void midi_player::set_bars(const std::vector<std::vector<md::bar>>& file){
