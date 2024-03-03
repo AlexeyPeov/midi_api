@@ -1,5 +1,6 @@
 # midi_api
-Create/edit/play midi files
+Create/edit/play midi files.
+This is a fork of cxxmidi (https://github.com/5tan/cxxmidi)
 
 ## USAGE:
 
