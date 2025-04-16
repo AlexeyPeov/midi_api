@@ -55,12 +55,6 @@ ninja
 If you are on Windows, there is a quick .bat script for debug:
 
 ```bat
-@echo off
-
-if not exist build ( mkdir build )
-cd build
-if not exist debug ( mkdir debug )
-cd debug
 
 @echo off
 
