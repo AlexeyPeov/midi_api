@@ -18,17 +18,17 @@ namespace md{
 
         MessageInterface &operator=(const MessageInterface &) = delete;
 
-        virtual void open_port(uint32_t port_num) = 0;
+        virtual void openPort(uint32_t port_num) = 0;
 
-        virtual void close_port() = 0;
+        virtual void closePort() = 0;
 
-        virtual void open_virtual_port(const std::string &port_name) = 0;
+        virtual void openVirtualPort(const std::string &port_name) = 0;
 
-        virtual size_t get_port_count() = 0;
+        virtual size_t getPortCount() = 0;
 
-        virtual std::string get_port_name(uint32_t port_num) = 0;
+        virtual std::string getPortName(uint32_t port_num) = 0;
 
-        virtual void send_message(const std::vector<uint8_t> *msg) = 0;
+        virtual void sendMessage(const std::vector<uint8_t> *msg) = 0;
 
         void reset();
 

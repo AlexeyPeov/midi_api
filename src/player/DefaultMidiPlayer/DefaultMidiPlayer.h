@@ -3,14 +3,14 @@
 #define MIDI_API_DEFAULT_MIDI_OUTPUT_H
 
 #if defined(_WIN32) || defined(_WIN64)
-#include "WindowsPlayer.h"
-typedef md::WindowsPlayer DefaultMidiOutput;
+#include "WindowsPlayer/WindowsPlayer.h"
+typedef md::WindowsPlayer DefaultMidiPlayer;
 #elif defined(__APPLE__)
 #include "ApplePlayer.h"
-typedef md::ApplePlayer DefaultMidiOutput;
+typedef md::ApplePlayer DefaultMidiPlayer;
 #elif defined(__linux__)
 #include "LinuxPlayer.h"
-typedef md::LinuxPlayer DefaultMidiOutput;
+typedef md::LinuxPlayer DefaultMidiPlayer;
 #else
     #error "Unknown platform"
 #endif

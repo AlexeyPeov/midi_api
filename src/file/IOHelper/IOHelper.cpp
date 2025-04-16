@@ -2,7 +2,7 @@
 
 namespace md {
 
-    uint32_t IOHelper::get_variable_len_quantity(std::ifstream &file) {
+    uint32_t IOHelper::getVariableLenQuantity(std::ifstream &file) {
         uint32_t r = 0;
         uint8_t c;
 
@@ -14,7 +14,7 @@ namespace md {
         return r;
     }
 
-    size_t IOHelper::save_variable_len_quantity(
+    size_t IOHelper::saveVariableLenQuantity(
             std::ofstream &output_file,
             unsigned int val
     ) {
@@ -43,25 +43,4 @@ namespace md {
         return amount;
     }
 
-    uint32_t IOHelper::extract_tempo(uint8_t v0, uint8_t v1, uint8_t v2) {
-
-        union {
-            uint32_t one_tempo;
-            uint8_t tab_tempo[3];
-        };
-        one_tempo = 0;
-
-        if (is_little_endian) {
-            tab_tempo[0] = v2;
-            tab_tempo[1] = v1;
-            tab_tempo[2] = v0;
-        } else {
-            tab_tempo[0] = v0;
-            tab_tempo[1] = v1;
-            tab_tempo[2] = v2;
-        }
-
-        return one_tempo;
-
-    }
 } // mapi

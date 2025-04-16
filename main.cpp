@@ -1,14 +1,17 @@
 #include "midi_api.h"
 
+int main()
+{
+    md::file file;
 
-int main() {
-    auto file = std::make_unique<md::file>();
+    int err = file.load("../../chopin.mid");
+    
+    if(err != 0)
+        return -1;
 
-    file->load("chopin.mid");
+    md::player player;
 
-    md::midi_player player;
-
-    player.set_file(std::move(file));
+    player.setFile(std::move(file));
 
     player.play();
 

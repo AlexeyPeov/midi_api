@@ -1,17 +1,15 @@
 #ifndef MIDI_API_WINDOWS_PLAYER_H
 #define MIDI_API_WINDOWS_PLAYER_H
 
-#include <windows.h>
-#include <mmsystem.h>
-
 #include <cstdint>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
 
+#include <windows.h>
 
-#include "MessageInterface.h"
+#include "../MessageInterface/MessageInterface.h"
 
 namespace md {
 
@@ -39,21 +37,21 @@ namespace md {
 
         virtual ~WindowsPlayer();
 
-        WindowsPlayer(const WindowsPlayer &);             // non-copyable
+        WindowsPlayer(const WindowsPlayer &) = delete;
 
-        WindowsPlayer &operator=(const WindowsPlayer &);  // non-copyable (assignment)
+        WindowsPlayer &operator=(const WindowsPlayer &) = delete;
 
-        void open_port(uint32_t portNumber = 0) override;
+        void openPort(uint32_t portNumber = 0) override;
 
-        void close_port() override;
+        void closePort() override;
 
-        void open_virtual_port(const std::string &portName) override;
+        void openVirtualPort(const std::string &portName) override;
 
-        size_t get_port_count() override;
+        size_t getPortCount() override;
 
-        std::string get_port_name(unsigned int portNumber_ = 0) override;
+        std::string getPortName(uint32_t portNumber_ = 0) override;
 
-        void send_message(const std::vector<uint8_t> *msg_) override;
+        void sendMessage(const std::vector<uint8_t> *msg_) override;
 
     protected:
         void init() override;

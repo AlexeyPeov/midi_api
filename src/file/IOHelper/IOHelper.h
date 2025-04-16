@@ -29,7 +29,7 @@ namespace md {
         }
 
         template <typename type>
-        static type read_as(std::ifstream &file) {
+        static type readAs(std::ifstream &file) {
             type r;
             file.read(reinterpret_cast<char *>(&r), sizeof(type));
             if ((sizeof(type) > 1) && is_little_endian) r = swap<type>(r);
@@ -37,21 +37,19 @@ namespace md {
         }
 
         template <typename type>
-        static size_t write_as(std::ofstream &file, type val) {
+        static size_t writeAs(std::ofstream &file, type val) {
             std::streamsize size = sizeof(val);
             if ((sizeof(type) > 1) && is_little_endian) val = swap<type>(val);
             file.write(reinterpret_cast<char *>(&val), size);
             return size;
         }
 
-        static uint32_t get_variable_len_quantity(std::ifstream &file);
+        static uint32_t getVariableLenQuantity(std::ifstream &file);
 
-        static size_t save_variable_len_quantity(
+        static size_t saveVariableLenQuantity(
                 std::ofstream &output_file,
                 unsigned int val
         );
-
-        static uint32_t extract_tempo(uint8_t v0, uint8_t v1, uint8_t v2);
     };
 
 }
